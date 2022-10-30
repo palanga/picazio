@@ -3,12 +3,12 @@ name: CI
 on:
   push:
     branches:
-      - master
+      - main
       - update/*
     tags: ["*"]
   pull_request:
     branches:
-      - master
+      - main
   workflow_dispatch:
 
 jobs:
