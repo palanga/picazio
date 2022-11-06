@@ -38,7 +38,7 @@ def toLaminarModDefault[R](shape: => Shape[R])(
 
 private def isInput(shape: => Shape[?]) = shape match {
   case _: picazio.Input[?] => true
-  case _                => false
+  case _                   => false
 }
 
 val onMouseOver = new EventProp[dom.MouseEvent]("mouseover")
