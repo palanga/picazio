@@ -111,4 +111,4 @@ private[picazio] val noopZIO: PartialFunction[Any, ZIO[Any, Nothing, Unit]] = _ 
 
 private[picazio] type LaminarElem = ReactiveHtmlElement[? <: dom.html.Element]
 private[picazio] type LaminarMod  = Modifier[LaminarElem]
-type KeyCode                   = Int
+type KeyCode                      = Int

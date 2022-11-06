@@ -40,9 +40,9 @@ object Buttons:
       .asInstanceOf[Button[Any]]
 
 case class Button[-R](
-                       private[picazio] val text: String,
-                       private[picazio] val attributes: List[Attribute[R]] = Nil,
-                       private[picazio] val defaultElevation: Elevation = Elevation.None,
+  private[picazio] val text: String,
+  private[picazio] val attributes: List[Attribute[R]] = Nil,
+  private[picazio] val defaultElevation: Elevation = Elevation.None,
 ) extends Shape(attributes):
 
   private val state: Var[ButtonState] = Var(ButtonState())
