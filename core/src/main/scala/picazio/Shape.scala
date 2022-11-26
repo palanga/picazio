@@ -47,26 +47,28 @@ trait Shape[-R](attributes: List[Attribute[R]]):
 
   def onClick[R1](zio: ZIO[R1, Nothing, Any]): Shape[R & R1] = addAttribute(Attribute.OnClick(zio))
 
-  def onClick_(f: => Unit): Shape[R] = addAttribute(Attribute.OnClick(ZIO succeed f))
+  def onClick_(f: => Unit): Shape[R] = addAttribute(Attribute.OnClick(ZIO.succeed(f)))
 
   def onKeyPress[R1](f: KeyCode => ZIO[R1, Nothing, Any]): Shape[R & R1] = addAttribute(Attribute.OnKeyPress(f))
 
   def onKeyPress[R1](f: PartialFunction[KeyCode, ZIO[R1, Nothing, Any]]): Shape[R & R1] =
     addAttribute(Attribute.OnKeyPress(f.orElse(noopZIO)))
 
-  def onKeyPress_(f: KeyCode => Unit): Shape[R] = addAttribute(Attribute.OnKeyPress(ZIO succeed f(_)))
+  def onKeyPress_(f: KeyCode => Unit): Shape[R] = addAttribute(Attribute.OnKeyPress(a => ZIO.succeed(f(a))))
 
-  def onKeyPress_(f: PartialFunction[KeyCode, Unit]): Shape[R] = onKeyPress(ZIO succeed f(_))
+  def onKeyPress_(f: PartialFunction[KeyCode, Unit]): Shape[R] = onKeyPress(a => ZIO.succeed(f(a)))
 
   def onMouse[R1](down: ZIO[R1, Nothing, Any], up: ZIO[R1, Nothing, Any]): Shape[R & R1] =
     addAttribute(Attribute.OnMouse(down, up))
 
-  def onMouse_(down: => Unit, up: => Unit): Shape[R] = addAttribute(Attribute.OnMouse(ZIO succeed down, ZIO succeed up))
+  def onMouse_(down: => Unit, up: => Unit): Shape[R] =
+    addAttribute(Attribute.OnMouse(ZIO.succeed(down), ZIO.succeed(up)))
 
   def onHover[R1](in: ZIO[R1, Nothing, Any], out: ZIO[R1, Nothing, Any]): Shape[R & R1] =
     addAttribute(Attribute.OnHover(in, out))
 
-  def onHover_(in: => Unit, out: => Unit): Shape[R] = addAttribute(Attribute.OnHover(ZIO succeed in, ZIO succeed out))
+  def onHover_(in: => Unit, out: => Unit): Shape[R] =
+    addAttribute(Attribute.OnHover(ZIO.succeed(in), ZIO.succeed(out)))
 
   /**
    * Create a new Shape containing this and that Shapes

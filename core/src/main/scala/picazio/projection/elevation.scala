@@ -5,7 +5,7 @@ import com.raquo.laminar.api.*
 import picazio.*
 import zio.ZIO
 
-class ElevationProjection[-R](private val self: Shape[R]):
+open class ElevationProjection[-R](private val self: Shape[R]):
   def none    = self.addAttribute(Attribute.Style(() => L.boxShadow := shadow(Elevation.None)))
   def lowest  = self.addAttribute(Attribute.Style(() => L.boxShadow := shadow(Elevation.Lowest)))
   def low     = self.addAttribute(Attribute.Style(() => L.boxShadow := shadow(Elevation.Low)))

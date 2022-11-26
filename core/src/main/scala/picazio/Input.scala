@@ -17,7 +17,7 @@ class Input[-R](text: Signal[String] = Signal.fromValue(""), attributes: List[At
 
   def placeholder(text: => String): Input[R] = addAttribute(Attribute.Placeholder(text))
 
-  def onInput_(f: String => Unit): Input[R] = addAttribute(Attribute.OnInput(ZIO succeed f(_)))
+  def onInput_(f: String => Unit): Input[R] = addAttribute(Attribute.OnInput(a => ZIO.succeed(f(a))))
 
   def onInput[R1](zio: String => ZIO[R1, Nothing, Any]): Input[R & R1] =
     addAttribute(Attribute.OnInput(zio))

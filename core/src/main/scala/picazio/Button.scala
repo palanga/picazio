@@ -59,8 +59,8 @@ case class Button[-R](
     def baseAttributes = List(
       Attribute.Style(() => L.boxShadow <-- currentElevation.map(shadow)),
       Attribute.Style(() => L.opacity <-- state.signal.map(calculateOpacity)),
-      Attribute.OnMouse(ZIO succeed state.update(_.press), ZIO succeed state.update(_.unPress)),
-      Attribute.OnHover(ZIO succeed state.update(_.hover), ZIO succeed state.update(_.unHover)),
+      Attribute.OnMouse(ZIO.succeed(state.update(_.press)), ZIO.succeed(state.update(_.unPress))),
+      Attribute.OnHover(ZIO.succeed(state.update(_.hover)), ZIO.succeed(state.update(_.unHover))),
     )
 
     def laminarMods = (attributes.reverse ++ baseAttributes).map(toLaminarMod(this))
