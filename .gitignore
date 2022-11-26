@@ -37,3 +37,8 @@ classes/
 .metals/
 project/metals.sbt
 project/project/metals.sbt
+
+# scala js
+/node_modules
+package-lock.json
+package.json
