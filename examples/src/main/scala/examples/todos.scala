@@ -36,24 +36,24 @@ object Main extends ZIOAppDefault {
 
   override def run =
     for {
-      _ <- Console.printLine("Starting progress bar demo.") // Outputs on browser console log.
+      _        <- Console.printLine("Starting progress bar demo.") // Outputs on browser console log.
       rootNode <- ZIO.succeed(document.createElement("div"))
-      _ <- ZIO.succeed(rootNode.setAttribute("id", "app"))
-      _ <- ZIO.succeed(document.getElementsByTagName("body").item(0).appendChild(rootNode))
-      _ <- update(rootNode).repeat(Schedule.spaced(1.seconds))
+      _        <- ZIO.succeed(rootNode.setAttribute("id", "app"))
+      _        <- ZIO.succeed(document.getElementsByTagName("body").item(0).appendChild(rootNode))
+      _        <- update(rootNode).repeat(Schedule.spaced(1.seconds))
     } yield ExitCode.success
 
   def update(target: dom.Element) =
     for {
-      time <- currentTime(TimeUnit.SECONDS)
+      time  <- currentTime(TimeUnit.SECONDS)
       output = progressBar((time % 11).toInt, 10)
-      _ <- ZIO.succeed(target.innerHTML = output)
+      _     <- ZIO.succeed(target.innerHTML = output)
     } yield ()
 
   def progressBar(tick: Int, size: Int): String = {
-    val bar_length = tick
+    val bar_length   = tick
     val empty_length = size - tick
-    val bar = "#" * bar_length + " " * empty_length
+    val bar          = "#" * bar_length + " " * empty_length
     s"$bar $bar_length%"
   }
 
