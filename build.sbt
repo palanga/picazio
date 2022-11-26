@@ -41,7 +41,7 @@ lazy val root =
     )
 
 lazy val core =
-  (project in file("mira"))
+  (project in file("core"))
     .enablePlugins(ScalaJSPlugin)
     .settings(
       name           := "picazio-core",
