@@ -22,6 +22,20 @@ To get snapshot releases:
 resolvers += "Sonatype OSS Snapshots" at "https://s01.oss.sonatype.org/content/repositories/snapshots",
 ```
 
+
+Usage
+-----
+
+* Create a Scala JS project (see `build.sbt` `examples` sub project)
+* Create an `html` file and a scala entry point (see `examples`).
+* Compile with `sbt compile`.
+* Link with `sbt fastLinkJS`.
+* Open the html file in a browser.
+* Make changes and link again with `sbt fastLinkJS`.
+
+[//]: # (* For a production build run `TODO`)
+
+
 [Link-SonatypeReleases]: https://s01.oss.sonatype.org/content/repositories/releases/io/github/palanga/picazio-core_sjs1_3/ "Sonatype Releases"
 [Link-SonatypeSnapshots]: https://s01.oss.sonatype.org/content/repositories/snapshots/io/github/palanga/picazio-core_sjs1_3/ "Sonatype Snapshots"
 

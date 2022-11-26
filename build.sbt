@@ -4,7 +4,7 @@ val MAIN_SCALA            = "3.2.1"
 val ALL_SCALA             = Seq(MAIN_SCALA)
 val ZIO_CASSANDRA_VERSION = "0.9.0"
 val ZIO_JSON_VERSION      = "0.3.0"
-val ZIO_VERSION           = "2.0.4"
+val ZIO_VERSION           = "2.0.2"
 val LAMINAR_VERSION       = "0.14.5"
 
 inThisBuild(
@@ -37,7 +37,8 @@ lazy val root =
       publish / skip := true
     )
     .aggregate(
-      core
+      core,
+      examples,
     )
 
 lazy val core =
@@ -50,13 +51,29 @@ lazy val core =
       run / fork     := true,
       testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
       libraryDependencies ++= Seq(
-        "dev.zio"   %%% "zio"          % ZIO_VERSION,
-        "dev.zio"    %% "zio-test"     % ZIO_VERSION % Test,
-        "dev.zio"    %% "zio-test-sbt" % ZIO_VERSION % Test,
-        "com.raquo" %%% "laminar"      % LAMINAR_VERSION,
+        "dev.zio"           %%% "zio"                  % ZIO_VERSION,
+        "dev.zio"            %% "zio-test"             % ZIO_VERSION % Test,
+        "dev.zio"            %% "zio-test-sbt"         % ZIO_VERSION % Test,
+        "com.raquo"         %%% "laminar"              % LAMINAR_VERSION,
+        "org.scala-js"      %%% "scalajs-dom"          % "2.1.0",
+        "io.github.cquiroz" %%% "scala-java-time"      % "2.3.0",
+        "io.github.cquiroz" %%% "scala-java-time-tzdb" % "2.3.0",
       ),
       commonSettings,
     )
+
+lazy val examples =
+  (project in file("examples"))
+    .enablePlugins(ScalaJSPlugin)
+    .settings(
+      name           := "examples",
+      publish / skip := true,
+      scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
+      scalaJSLinkerConfig ~= { _.withSourceMap(true) },
+      scalaJSUseMainModuleInitializer := true,
+      commonSettings,
+    )
+    .dependsOn(core)
 
 val commonSettings = Def.settings(
   scalaVersion       := MAIN_SCALA,
