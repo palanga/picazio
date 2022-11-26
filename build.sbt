@@ -1,11 +1,10 @@
 name := "picazio"
 
-val MAIN_SCALA            = "3.2.1"
-val ALL_SCALA             = Seq(MAIN_SCALA)
-val ZIO_CASSANDRA_VERSION = "0.9.0"
-val ZIO_JSON_VERSION      = "0.3.0"
-val ZIO_VERSION           = "2.0.2"
-val LAMINAR_VERSION       = "0.14.5"
+val MAIN_SCALA              = "3.2.1"
+val ALL_SCALA               = Seq(MAIN_SCALA)
+val ZIO_VERSION             = "2.0.2"
+val LAMINAR_VERSION         = "0.14.5"
+val SCALA_JAVA_TIME_VERSION = "2.5.0-M1"
 
 inThisBuild(
   List(
@@ -55,9 +54,8 @@ lazy val core =
         "dev.zio"            %% "zio-test"             % ZIO_VERSION % Test,
         "dev.zio"            %% "zio-test-sbt"         % ZIO_VERSION % Test,
         "com.raquo"         %%% "laminar"              % LAMINAR_VERSION,
-        "org.scala-js"      %%% "scalajs-dom"          % "2.1.0",
-        "io.github.cquiroz" %%% "scala-java-time"      % "2.3.0",
-        "io.github.cquiroz" %%% "scala-java-time-tzdb" % "2.3.0",
+        "io.github.cquiroz" %%% "scala-java-time"      % SCALA_JAVA_TIME_VERSION,
+        "io.github.cquiroz" %%% "scala-java-time-tzdb" % SCALA_JAVA_TIME_VERSION,
       ),
       commonSettings,
     )
