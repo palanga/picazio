@@ -81,12 +81,11 @@ trait Shape[-R](attributes: List[Attribute[R]]):
 
 object Shape:
 
-  val empty: Text[Any]                                        = Text("")
-  def button: Buttons.type                                    = picazio.Buttons
-  val input: Input[Any]                                       = Input()
-  def text(text: String): Text[Any]                           = Text.from(text)
-  def text(text: AnyVal): Text[Any]                           = Text.from(text.toString)
-  def text(textSignal: => Signal[String | AnyVal]): Text[Any] = Text.fromSignal(textSignal)
+  val empty: Text[Any]                               = Text("")
+  def button: Buttons.type                           = picazio.Buttons
+  val input: Input[Any]                              = Input()
+  def text(text: String): Text[Any]                  = Text.from(text)
+  def text(textSignal: => Signal[String]): Text[Any] = Text.fromSignal(textSignal)
 
   def column[R](shapes: => Shape[R]*): Column[R] = Column(shapes)
   def row[R](shapes: => Shape[R]*): Row[R]       = Row(shapes)
@@ -104,7 +103,7 @@ object Shape:
   /**
    * Alias for [[Shape.text]]
    */
-  def fromTextSignal(textSignal: => Signal[String | AnyVal]): Text[Any] = Shape.text(textSignal)
+  def fromTextSignal(textSignal: => Signal[String]): Text[Any] = Shape.text(textSignal)
 
 private[picazio] val none: Val[None.type]                                   = Val(None)
 private[picazio] val always: Val[Boolean]                                   = Val(true)

@@ -28,8 +28,7 @@ Usage
 
 * Create a Scala JS project (see `build.sbt` `examples` sub project)
 * Create an `html` file and a scala entry point (see `examples`).
-* Compile with `sbt compile`.
-* Link with `sbt fastLinkJS`.
+* Compile and link with `sbt fastLinkJS`.
 * Open the html file in a browser.
 * Make changes and link again with `sbt fastLinkJS`.
 
