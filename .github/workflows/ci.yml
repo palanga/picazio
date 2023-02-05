@@ -10,7 +10,7 @@ on:
 jobs:
 
   build:
-    uses: ./.github/workflows/compile-and-lint.yml
+    uses: ./.github/workflows/compile-link-and-lint.yml
 
   publish:
     runs-on: ubuntu-latest

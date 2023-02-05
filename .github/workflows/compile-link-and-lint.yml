@@ -1,4 +1,4 @@
-name: Compile and lint
+name: Compile, link and lint
 
 on:
   pull_request:
@@ -23,7 +23,7 @@ jobs:
       - name: Check proper code formatting
         run: sbt check
 
-  compile:
+  compile-and-link:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -34,5 +34,6 @@ jobs:
           distribution: zulu
           java-version: 11
           cache: sbt
-      - name: Compile
-        run: sbt compile
+      - name: Compile and link JS
+        run: sbt examples/fastLinkJS
+
