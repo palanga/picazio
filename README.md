@@ -11,7 +11,7 @@ A web UI library made with ZIO and Laminar
 Installation
 ------------
 
-We publish to maven central so you just have to add this to your `build.sbt` file:
+We publish to maven central, so you can add this to your `build.sbt` file:
 
 ```sbt
 libraryDependencies += "dev.palanga" %% "picazio" % "version"
@@ -28,7 +28,7 @@ Usage
 -----
 
 * Create a Scala JS project (see `build.sbt` `examples` sub project)
-* Create an `html` file and a scala entry point (see `examples`).
+* Create an `html` file and a scala entry point like in any other Scala JS project (see `examples`).
 * Compile and link with `sbt fastLinkJS`.
 * Open the html file in a browser.
 * Make changes and link again with `sbt fastLinkJS`.
