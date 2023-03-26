@@ -3,7 +3,7 @@ name := "picazio"
 val MAIN_SCALA              = "3.2.2"
 val ALL_SCALA               = Seq(MAIN_SCALA)
 val ZIO_VERSION             = "2.0.10"
-val LAMINAR_VERSION         = "0.14.5"
+val LAMINAR_VERSION         = "15.0.1"
 val SCALA_JAVA_TIME_VERSION = "2.5.0"
 
 inThisBuild(
