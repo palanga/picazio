@@ -39,7 +39,6 @@ addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck"
 
 lazy val root =
   (project in file("."))
-//    .enablePlugins(ScalaJSPlugin) // capaz necesito esto para publicar la biblioteca por eso no lo borro
     .settings(
       publish / skip := true
     )

@@ -5,8 +5,8 @@ PicaZIO
 [![Release Artifacts][Badge-SonatypeReleases]][Link-SonatypeReleases]
 [![Snapshot Artifacts][Badge-SonatypeSnapshots]][Link-SonatypeSnapshots]
 
-A web UI library made with ZIO and Laminar
-------------------------------------------
+A ScalaJS web UI library made with ZIO and Laminar
+--------------------------------------------------
 
 ```scala
 import picazio.*
@@ -22,7 +22,7 @@ Installation
 We publish to maven central, so you can add this to your `build.sbt` file:
 
 ```scala
-libraryDependencies += "io.github.palanga" %% "picazio" % "version"
+libraryDependencies += "io.github.palanga" %%% "picazio-web" % "version"
 ```
 
 To get snapshot releases:
