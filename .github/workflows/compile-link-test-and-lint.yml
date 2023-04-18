@@ -1,0 +1,43 @@
+name: Compile, link, test and lint
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: zulu
+          java-version: 11
+          cache: sbt
+      - name: Check proper code formatting
+        run: sbt check
+
+  cross-compile-link-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install chrome driver
+        uses: nanasess/setup-chromedriver@v2
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: zulu
+          java-version: 11
+          cache: sbt
+      - name: Setup chrome driver, cross compile, link JS and test
+        run: |
+          export DISPLAY=:99
+          sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 &
+          sbt +examples/test
