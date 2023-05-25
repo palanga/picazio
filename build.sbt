@@ -55,7 +55,8 @@ lazy val core =
       name        := "picazio-core",
       description := "A web UI library made with ZIO and Laminar",
       libraryDependencies ++= Seq(
-        "dev.zio" %%% "zio" % ZIO_VERSION
+        "dev.zio" %%% "zio"         % ZIO_VERSION,
+        "dev.zio" %%% "zio-streams" % ZIO_VERSION,
       ),
       commonSettings,
     )
@@ -73,9 +74,12 @@ lazy val web =
         "org.scalatest"     %%% "scalatest"            % SCALA_TEST_VERSION % Test,
       ),
       Test / parallelExecution := false,
-      Test / jsEnv             := new SeleniumJSEnv(new ChromeOptions(), SeleniumJSEnv.Config().withKeepAlive(true)),
+      Test / jsEnv             := seleniumJSEnv(keepTestBrowserAlive = false),
       commonSettings,
     ).dependsOn(core)
+
+def seleniumJSEnv(keepTestBrowserAlive: Boolean) =
+  new SeleniumJSEnv(new ChromeOptions(), SeleniumJSEnv.Config().withKeepAlive(keepTestBrowserAlive))
 
 lazy val examples =
   (project in file("examples"))
@@ -84,10 +88,6 @@ lazy val examples =
       name                            := "examples",
       publish / skip                  := true,
       scalaJSUseMainModuleInitializer := true,
-      libraryDependencies ++= Seq(
-        "org.scalatest" %%% "scalatest" % SCALA_TEST_VERSION % Test
-      ),
-      Test / jsEnv := new SeleniumJSEnv(new ChromeOptions()),
       commonSettings,
     )
     .dependsOn(
@@ -107,6 +107,7 @@ def commonOptions = Seq(
   "-language:higherKinds",
   "-language:existentials",
   "-unchecked",
+  "-Wconf:msg=package object inheritance is deprecated:info-summary",
 )
 
 def versionSpecificOptions(scalaVersion: String) =
