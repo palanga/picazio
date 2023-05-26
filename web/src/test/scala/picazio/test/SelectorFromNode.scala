@@ -10,4 +10,7 @@ case class SelectorFromNode(nodeId: String) extends Selector {
   override def childrenCount: Int =
     document.getElementById(nodeId).childElementCount
 
+  override def firstElementChild: Element =
+    document.getElementById(nodeId).firstElementChild
+
 }

@@ -46,6 +46,31 @@ object WebInterpreter {
       case StaticColumn(content) =>
         div(content.map(toLaminar), display.flex, flexDirection.column, alignItems.flexStart, justifyContent.flexStart)
 
+      case DynamicColumn(content) =>
+        val laminarSignal: LaminarSignal[Seq[Shape]] = toLaminarSignal(content)
+        laminarSignal.map(_.map(toLaminar))
+        div(
+          children <-- laminarSignal.map(_.map(toLaminar)),
+          display.flex,
+          flexDirection.column,
+          alignItems.flexStart,
+          justifyContent.flexStart,
+        )
+
+      case StaticRow(content) =>
+        div(content.map(toLaminar), display.flex, flexDirection.row, alignItems.flexStart, justifyContent.flexStart)
+
+      case DynamicRow(content) =>
+        val laminarSignal: LaminarSignal[Seq[Shape]] = toLaminarSignal(content)
+        laminarSignal.map(_.map(toLaminar))
+        div(
+          children <-- laminarSignal.map(_.map(toLaminar)),
+          display.flex,
+          flexDirection.row,
+          alignItems.flexStart,
+          justifyContent.flexStart,
+        )
+
       case OnClick(task, inner) =>
         val runOnClick = onClick --> { _ => runtime.unsafe.run(task) }
         toLaminar(inner).amend(runOnClick)

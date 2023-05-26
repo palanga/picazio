@@ -1,9 +1,7 @@
 package picazio
 
-import org.scalajs.dom
-import org.scalajs.dom.Event
-import org.scalajs.dom.html.Input
 import picazio.test.*
+import picazio.test.utils.*
 import zio.*
 import zio.stream.*
 
@@ -23,8 +21,7 @@ class TextInputWebAppTest extends WebInterpreterSpec {
       input        <- ZIO.attempt(select.selectInputWithPlaceholder("start typing..."))
       echoTextSpan <- ZIO.attempt(select.selectSpanWithText(""))
       emptyText     = echoTextSpan.textContent
-      _            <- ZIO.attempt(inputText(input, "hola"))
-      _            <- textRef.changes.runHead
+      _            <- inputTextAndWait(input, "hola", textRef)
       echoedText    = echoTextSpan.textContent
     } yield emptyText == "" && echoedText == "hola"
 
@@ -48,12 +45,12 @@ class TextInputWebAppTest extends WebInterpreterSpec {
       _               <- ZIO.attempt(render(textInputWithReversedEcho(textRef, textRefReversed)))
       input           <- ZIO.attempt(select.selectInputWithPlaceholder("start typing..."))
       inputReversed   <- ZIO.attempt(select.selectInputWithPlaceholder("start typing in reverse..."))
-      _               <- ZIO.attempt(inputText(input, "hola"))
+      _               <- inputText(input, "hola")
       _               <- textRef.changes.runHead
       _               <- textRefReversed.changes.runHead
       text             = input.value
       textReversed     = inputReversed.value
-      _               <- ZIO.attempt(inputText(inputReversed, "neuquen"))
+      _               <- inputText(inputReversed, "neuquen")
       _               <- textRef.changes.runHead
       _               <- textRefReversed.changes.runHead
       neuquen          = input.value
@@ -99,15 +96,15 @@ class TextInputWebAppTest extends WebInterpreterSpec {
       _                    <- ZIO.attempt(render(inchesToCentimetersConverter(inchesRef, centimetersRef)))
       centimeters          <- ZIO.attempt(select.selectInputWithPlaceholder("centimeters"))
       inches               <- ZIO.attempt(select.selectInputWithPlaceholder("inches"))
-      _                    <- ZIO.attempt(inputText(centimeters, "254"))
+      _                    <- inputText(centimeters, "254")
       _                    <- inchesRef.changes.runHead
       _                    <- centimetersRef.changes.runHead
       inches_100            = inches.value
-      _                    <- ZIO.attempt(inputText(inches, "1"))
+      _                    <- inputText(inches, "1")
       _                    <- inchesRef.changes.runHead
       _                    <- centimetersRef.changes.runHead
       centimeters_2_54      = centimeters.value
-      _                    <- ZIO.attempt(inputText(inches, "invalid number"))
+      _                    <- inputText(inches, "invalid number")
       _                    <- inchesRef.changes.runHead
       _                    <- centimetersRef.changes.runHead
       centimetersNotUpdated = centimeters.value
@@ -127,11 +124,11 @@ class TextInputWebAppTest extends WebInterpreterSpec {
       _                        <- ZIO.attempt(render(numbersInputWithEcho(inputState)))
       numbersInput             <- ZIO.attempt(select.selectInputWithPlaceholder("numbers"))
       numbersEcho              <- ZIO.attempt(select.selectSpanWithText(""))
-      _                        <- ZIO.attempt(inputText(numbersInput, "107"))
+      _                        <- inputText(numbersInput, "107")
       _                        <- inputState.changes.runHead
       number_107                = numbersInput.value
       number_107_echo           = numbersEcho.textContent
-      _                        <- ZIO.attempt(inputText(numbersInput, "invalid number"))
+      _                        <- inputText(numbersInput, "invalid number")
       _                        <- inputState.changes.runHead
       number_107_unchanged      = numbersInput.value
       number_107_echo_unchanged = numbersEcho.textContent
@@ -139,11 +136,6 @@ class TextInputWebAppTest extends WebInterpreterSpec {
       && number_107_echo == "107"
       && number_107_unchanged == "107"
       && number_107_echo_unchanged == "107"
-  }
-
-  private def inputText(input: Input, text: String): Unit = {
-    input.value = text
-    input.dispatchEvent(new Event("input"));
   }
 
 }

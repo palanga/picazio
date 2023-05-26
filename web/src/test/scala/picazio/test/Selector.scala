@@ -1,12 +1,13 @@
 package picazio.test
 
-import org.scalajs.dom.NodeList
 import org.scalajs.dom.html.*
+import org.scalajs.dom.{Element, NodeList}
 
 trait Selector {
 
   def selectAll(query: String): NodeList[org.scalajs.dom.Element]
   def childrenCount: Int
+  def firstElementChild: Element
 
   def selectAllDivs: Seq[Div]              = selectAll("div").map(_.asInstanceOf[Div]).toSeq
   def selectDivWithText(text: String): Div = selectAllDivs.filter(_.textContent == text).head

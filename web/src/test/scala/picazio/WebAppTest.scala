@@ -3,6 +3,7 @@ package picazio
 import org.scalajs.dom
 import org.scalajs.dom.HTMLElement
 import picazio.test.*
+import picazio.test.utils.*
 import zio.*
 import zio.stream.*
 
@@ -123,11 +124,5 @@ class WebAppTest extends WebInterpreterSpec {
       } yield counter0.toInt == 0 && counter1.toInt == 1 && counterNegative1.toInt == -1
 
   }
-
-  private def clickAndWait(button: HTMLElement, ref: SubscriptionRef[?]): Task[Unit] =
-    for {
-      _ <- ZIO.attempt(button.click())
-      _ <- ref.changes.runHead
-    } yield ()
 
 }
