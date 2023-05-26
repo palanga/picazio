@@ -3,7 +3,7 @@ package picazio
 import zio.*
 import zio.stream.*
 
-trait Signal[A] {
+trait Signal[+A] {
   def get: ZIO[Any, Nothing, A]
   def changes: ZStream[Any, Nothing, A]
   def map[B](f: A => B): Signal[B]
