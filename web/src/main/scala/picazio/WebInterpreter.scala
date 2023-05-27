@@ -11,7 +11,7 @@ import zio.stream.*
 
 import scala.util.Try
 
-object WebInterpreter {
+private[picazio] object WebInterpreter {
 
   private[picazio] def toLaminar(
     shape: Shape

@@ -9,10 +9,10 @@ A ScalaJS web UI library made with ZIO and Laminar
 --------------------------------------------------
 
 ```scala
-import picazio.*
+import picazio._
 
 object Main extends WebApp {
-  override def root = Shape.text("hola mundo")
+  override def root = Shape.text("hola")
 }
 ```
 
