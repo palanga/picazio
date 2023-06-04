@@ -37,8 +37,8 @@ object Shape {
 }
 
 sealed trait Shape {
-  def onClick(action: Task[Unit]): Shape              = Shape.OnClick(action, this)
-  def onInput(action: String => Task[Unit]): Shape    = Shape.OnInput(action, this)
-  def onInputFilter(filter: String => Boolean): Shape = Shape.OnInputFilter(filter, this)
-  private[picazio] def customStyles: Styles           = Styles.empty // TODO
+  final def onClick(action: Task[Unit]): Shape              = Shape.OnClick(action, this)
+  final def onInput(action: String => Task[Unit]): Shape    = Shape.OnInput(action, this)
+  final def onInputFilter(filter: String => Boolean): Shape = Shape.OnInputFilter(filter, this)
+  final private[picazio] def customStyles: Styles           = Styles.empty // TODO
 }
