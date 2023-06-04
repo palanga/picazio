@@ -1,7 +1,6 @@
 package picazio
 
 import org.scalajs.dom
-import org.scalajs.dom.HTMLElement
 import picazio.test.*
 import picazio.test.utils.*
 import zio.*

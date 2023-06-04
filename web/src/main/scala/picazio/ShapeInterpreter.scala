@@ -1,21 +1,24 @@
 package picazio
 
 import com.raquo.airstream.custom.CustomSource.*
-import com.raquo.airstream.ownership.OneTimeOwner
 import com.raquo.laminar.api.L.{Signal as LaminarSignal, button as laminarButton, *}
 import com.raquo.laminar.nodes.ReactiveElement
 import org.scalajs.dom.Element
 import picazio.Shape.*
+import picazio.style.Theme
 import zio.*
-import zio.stream.*
 
 import scala.util.Try
+import scala.util.chaining.scalaUtilChainingOps
 
-private[picazio] object WebInterpreter {
+private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe: Unsafe) {
 
-  private[picazio] def toLaminar(
-    shape: Shape
-  )(implicit runtime: Runtime[Any], unsafe: Unsafe): ReactiveElement[Element] =
+  private val styleInterpreter = new StyleInterpreter()
+
+  private[picazio] def asLaminarElement(shape: Shape): ReactiveElement[Element] =
+    convertToLaminarReactiveElement(shape) pipe styleInterpreter.applyStyles(shape)
+
+  private def convertToLaminarReactiveElement(shape: Shape): ReactiveElement[Element] = {
     shape match {
       case StaticText(content) => span(content)
 
@@ -44,13 +47,17 @@ private[picazio] object WebInterpreter {
       case Button(content) => laminarButton(content)
 
       case StaticColumn(content) =>
-        div(content.map(toLaminar), display.flex, flexDirection.column, alignItems.flexStart, justifyContent.flexStart)
+        div(
+          content.map(asLaminarElement),
+          display.flex,
+          flexDirection.column,
+          alignItems.flexStart,
+          justifyContent.flexStart,
+        )
 
       case DynamicColumn(content) =>
-        val laminarSignal: LaminarSignal[Seq[Shape]] = toLaminarSignal(content)
-        laminarSignal.map(_.map(toLaminar))
         div(
-          children <-- laminarSignal.map(_.map(toLaminar)),
+          children <-- toLaminarSignal(content).map(_.map(asLaminarElement)),
           display.flex,
           flexDirection.column,
           alignItems.flexStart,
@@ -58,13 +65,17 @@ private[picazio] object WebInterpreter {
         )
 
       case StaticRow(content) =>
-        div(content.map(toLaminar), display.flex, flexDirection.row, alignItems.flexStart, justifyContent.flexStart)
+        div(
+          content.map(asLaminarElement),
+          display.flex,
+          flexDirection.row,
+          alignItems.flexStart,
+          justifyContent.flexStart,
+        )
 
       case DynamicRow(content) =>
-        val laminarSignal: LaminarSignal[Seq[Shape]] = toLaminarSignal(content)
-        laminarSignal.map(_.map(toLaminar))
         div(
-          children <-- laminarSignal.map(_.map(toLaminar)),
+          children <-- toLaminarSignal(content).map(_.map(asLaminarElement)),
           display.flex,
           flexDirection.row,
           alignItems.flexStart,
@@ -73,7 +84,7 @@ private[picazio] object WebInterpreter {
 
       case OnClick(task, inner) =>
         val runOnClick = onClick --> { _ => runtime.unsafe.run(task) }
-        toLaminar(inner).amend(runOnClick)
+        asLaminarElement(inner).amend(runOnClick)
 
       case OnInput(action, TextInput(_placeholder)) =>
         input(
@@ -92,10 +103,12 @@ private[picazio] object WebInterpreter {
 
       case OnInput(action, SignaledTextInput(_placeholder, signal)) =>
         val state = Var("")
+
         def handleOnInput(current: String): Unit = {
           state.set(current)
           runtime.unsafe.run(action(current))
         }
+
         runtime.unsafe.runToFuture(signal.changes.map(value => state.set(value)).runDrain)
         input(
           placeholder := _placeholder,
@@ -125,6 +138,8 @@ private[picazio] object WebInterpreter {
         )
 
     }
+
+  }
 
   private def toLaminarSignal[A](signal: Signal[A])(implicit runtime: Runtime[Any], unsafe: Unsafe): LaminarSignal[A] =
     LaminarSignal.fromCustomSource(

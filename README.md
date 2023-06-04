@@ -57,8 +57,9 @@ libraryDependencies += "org.scala-js" %% "scalajs-env-selenium" % version
 jsEnv in Test := new org.scalajs.jsenv.selenium.SeleniumJSEnv(new org.openqa.selenium.chrome.ChromeOptions())
 ```
 
-* Make sure that `chromedriver` is available in your project. You can install it
+* Make sure that `chromedriver` is available in your PATH. You can install it
   with `npm install chromedriver --save-dev`
+* Add to your PATH variable with `export PATH=$PATH:$PWD/node_modules/.bin`
 * Run tests with `sbt test`
 
 Build

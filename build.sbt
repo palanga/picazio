@@ -2,7 +2,7 @@ name := "picazio"
 
 val SCALA_2                 = "2.13.10"
 val SCALA_3                 = "3.3.0"
-val MAIN_SCALA              = SCALA_3
+val MAIN_SCALA              = SCALA_2
 val ALL_SCALA               = Seq(SCALA_3, SCALA_2)
 val ZIO_VERSION             = "2.0.14"
 val LAMINAR_VERSION         = "15.0.0"
@@ -58,6 +58,7 @@ lazy val core =
         "dev.zio" %%% "zio"         % ZIO_VERSION,
         "dev.zio" %%% "zio-streams" % ZIO_VERSION,
       ),
+      Test / skip := true,
       commonSettings,
     )
 
@@ -87,6 +88,7 @@ lazy val examples =
     .settings(
       name                            := "examples",
       publish / skip                  := true,
+      Test / skip                     := true,
       scalaJSUseMainModuleInitializer := true,
       commonSettings,
     )

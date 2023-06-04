@@ -4,10 +4,10 @@ import org.scalajs.dom.html.*
 import org.scalajs.dom.{Element, NodeList}
 
 trait Selector {
-
   def selectAll(query: String): NodeList[org.scalajs.dom.Element]
   def childrenCount: Int
   def firstElementChild: Element
+  def innerHtml: String
 
   def selectAllDivs: Seq[Div]              = selectAll("div").map(_.asInstanceOf[Div]).toSeq
   def selectDivWithText(text: String): Div = selectAllDivs.filter(_.textContent == text).head

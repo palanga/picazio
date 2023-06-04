@@ -1,5 +1,6 @@
 package picazio
 
+import picazio.style.Styles
 import zio.*
 import zio.stream.*
 
@@ -39,4 +40,5 @@ sealed trait Shape {
   def onClick(action: Task[Unit]): Shape              = Shape.OnClick(action, this)
   def onInput(action: String => Task[Unit]): Shape    = Shape.OnInput(action, this)
   def onInputFilter(filter: String => Boolean): Shape = Shape.OnInputFilter(filter, this)
+  private[picazio] def customStyles: Styles           = Styles.empty // TODO
 }

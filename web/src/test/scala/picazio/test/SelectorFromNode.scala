@@ -13,4 +13,6 @@ case class SelectorFromNode(nodeId: String) extends Selector {
   override def firstElementChild: Element =
     document.getElementById(nodeId).firstElementChild
 
+  override def innerHtml: String = document.getElementById(nodeId).innerHTML
+
 }
