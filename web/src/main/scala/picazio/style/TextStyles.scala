@@ -1,5 +1,5 @@
 package picazio.style
 
 object TextStyles {
-  val default: Styles = Styles.empty.paddingTop(_.small)
+  val default: Styles = Styles.fromStyle(Style.PaddingTop(Size.small))
 }

@@ -127,6 +127,12 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           ),
         )
 
+      case Styled(_, inner) => asLaminarElement(inner)
+
+      case OnInput(action, Styled(_, inner)) => asLaminarElement(OnInput(action, inner))
+
+      case OnInputFilter(filter, Styled(_, inner)) => asLaminarElement(OnInputFilter(filter, inner))
+
       case OnInput(_, inner) =>
         throw new IllegalArgumentException(
           s"Can't add an on input handler to a non input element: ${inner.getClass.getName}"

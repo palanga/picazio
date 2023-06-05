@@ -36,6 +36,8 @@ inThisBuild(
 
 addCommandAlias("fmt", "all scalafmtSbt scalafmt test:scalafmt")
 addCommandAlias("check", "all scalafmtSbtCheck scalafmtCheck test:scalafmtCheck")
+addCommandAlias("testcompile", "Test/compile")
+addCommandAlias("crosstestcompile", "+Test/compile")
 
 lazy val root =
   (project in file("."))

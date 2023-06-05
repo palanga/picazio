@@ -33,6 +33,7 @@ object Shape {
   private[picazio] final case class OnClick(action: Task[Unit], inner: Shape)                              extends Shape
   private[picazio] final case class OnInput(action: String => Task[Unit], inner: Shape)                    extends Shape
   private[picazio] final case class OnInputFilter(filter: String => Boolean, inner: Shape)                 extends Shape
+  private[picazio] final case class Styled(styles: Styles, inner: Shape)                                   extends Shape
 
 }
 
@@ -40,5 +41,4 @@ sealed trait Shape {
   final def onClick(action: Task[Unit]): Shape              = Shape.OnClick(action, this)
   final def onInput(action: String => Task[Unit]): Shape    = Shape.OnInput(action, this)
   final def onInputFilter(filter: String => Boolean): Shape = Shape.OnInputFilter(filter, this)
-  final private[picazio] def customStyles: Styles           = Styles.empty // TODO
 }

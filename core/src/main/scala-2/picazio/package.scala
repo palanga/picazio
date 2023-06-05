@@ -1,1 +1,1 @@
-package object picazio extends SignalModule {}
+package object picazio extends SignalModule with StyleModule {}

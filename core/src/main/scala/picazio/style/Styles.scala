@@ -1,31 +1,26 @@
 package picazio.style
 
-case class Styles(self: Seq[Style]) {
-
-  def cursor(cursor: Cursor): Styles = overrideStyle(Style.Cursor(cursor))
-
-  def paddingTop(spacing: SpacingSelector => Spacing): Styles =
-    overrideStyle(Style.PaddingTop(spacing(SpacingSelector.default)))
-
-  def paddingBottom(spacing: SpacingSelector => Spacing): Styles =
-    overrideStyle(Style.PaddingBottom(spacing(SpacingSelector.default)))
-
-  def marginTop(spacing: SpacingSelector => Spacing): Styles =
-    Styles(Style.MarginTop(spacing(SpacingSelector.default)) +: self.filterNot(_.isInstanceOf[Style.MarginTop]))
+final class Styles private (private val stylesMap: Map[Class[? <: Style], Style]) extends AnyVal {
 
   /**
-   * Combine this styles whit that styles. Right side argument (that) overrides
-   * the other.
+   * Return a new Styles containing the styles from the left hand operand
+   * followed by the styles from the right hand operand. The right hand operand
+   * overrides the left hand operand.
    */
-  def ++(that: Styles): Styles = overrideStyles(that.self)
+  private[picazio] def ++(that: Styles): Styles = new Styles(this.stylesMap ++ that.stylesMap)
 
-  private def overrideStyle(style: Style): Styles = Styles(style +: self.filterNot(_.isInstanceOf[style.type]))
+  private[picazio] def values: Seq[Style] = this.stylesMap.values.toSeq
 
-  private def overrideStyles(thatStyles: Seq[Style]): Styles =
-    Styles(thatStyles ++ self.filterNot(style => thatStyles.exists(_.isInstanceOf[style.type])))
+  /**
+   * Add a new Style to this Styles. If this Styles already contains a Style
+   * definition of the same type the new value overrides the old one.
+   */
+  private[picazio] def +(style: Style): Styles = new Styles(this.stylesMap + (style.getClass -> style))
 
 }
 
-object Styles {
-  val empty: Styles = Styles(Nil)
+private[picazio] object Styles {
+  def fromStyle(style: Style): Styles    = empty + style
+  def fromStyles(styles: Style*): Styles = styles.foldLeft(empty)(_ + _)
+  val empty: Styles                      = new Styles(Map.empty)
 }
