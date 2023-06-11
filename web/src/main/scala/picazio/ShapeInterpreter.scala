@@ -1,14 +1,13 @@
 package picazio
 
-import com.raquo.airstream.custom.CustomSource.*
-import com.raquo.laminar.api.L.{Signal as LaminarSignal, button as laminarButton, *}
+import com.raquo.laminar.api.L.{button as laminarButton, *}
 import com.raquo.laminar.nodes.ReactiveElement
 import org.scalajs.dom.Element
 import picazio.Shape.*
+import picazio.signal.toLaminarSignal
 import picazio.style.Theme
 import zio.*
 
-import scala.util.Try
 import scala.util.chaining.scalaUtilChainingOps
 
 private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe: Unsafe) {
@@ -146,13 +145,5 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
     }
 
   }
-
-  private def toLaminarSignal[A](signal: Signal[A])(implicit runtime: Runtime[Any], unsafe: Unsafe): LaminarSignal[A] =
-    LaminarSignal.fromCustomSource(
-      initial = runtime.unsafe.run(signal.get).toTry,
-      start = (setCurrent: SetCurrentValue[A], _: GetCurrentValue[A], _, _) =>
-        runtime.unsafe.runToFuture(signal.changes.map(value => setCurrent(Try(value))).runDrain),
-      stop = _ => (),
-    )
 
 }

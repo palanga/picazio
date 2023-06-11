@@ -1,7 +1,6 @@
 package picazio
 
 import com.raquo.laminar.api.L.*
-import com.raquo.laminar.modifiers.KeySetter.StyleSetter
 import com.raquo.laminar.nodes.*
 import org.scalajs.dom.Element
 import picazio.Shape.*
@@ -39,17 +38,22 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
   private def applyTheme(styles: Styles): ThemedStyles =
     new ThemedStyles(styles, runtime.environment.get[Theme])
 
-  private def convertToLaminarStyleSetters(themedStyles: ThemedStyles): Seq[StyleSetter] =
+  private def convertToLaminarStyleSetters(themedStyles: ThemedStyles): Seq[Modifier[ReactiveHtmlElement.Base]] =
     themedStyles.styles.values.map {
-      case Style.MarginTop(size)     => marginTop     := (size * themedStyles.theme.spacingMultiplier).toString
-      case Style.PaddingTop(size)    => paddingTop    := (size * themedStyles.theme.spacingMultiplier).toString
-      case Style.PaddingBottom(size) => paddingBottom := (size * themedStyles.theme.spacingMultiplier).toString
+      case Style.MarginTop(size)     => marginTop     := (size * themedStyles.theme.sizeMultiplier).toString
+      case Style.PaddingTop(size)    => paddingTop    := (size * themedStyles.theme.sizeMultiplier).toString
+      case Style.PaddingBottom(size) => paddingBottom := (size * themedStyles.theme.sizeMultiplier).toString
       case Style.Cursor(c)           => cursor        := c.toString.toLowerCase
+
+      case Style.DynamicPaddingTop(size) =>
+        paddingTop <-- signal.toLaminarSignal(size.map(_ * themedStyles.theme.sizeMultiplier).map(_.toString))
     }
 
-  private def amendStyles(element: ReactiveElement[Element])(styleSetters: Seq[StyleSetter]): ReactiveElement[Element] =
+  private def amendStyles(
+    element: ReactiveElement[Element]
+  )(styleModifiers: Seq[Modifier[ReactiveHtmlElement.Base]]): ReactiveElement[Element] =
     element match {
-      case html: ReactiveHtmlElement[?] => html.amend(styleSetters)
+      case html: ReactiveHtmlElement[?] => html.amend(styleModifiers)
       case svg: ReactiveSvgElement[?]   => svg
       case _ =>
         throw new IllegalArgumentException(

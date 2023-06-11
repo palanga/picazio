@@ -3,6 +3,7 @@ package picazio
 import org.scalatest.matchers.should.Matchers
 import picazio.style.*
 import picazio.test.*
+import zio.stream.*
 
 class CustomStylesTest extends WebInterpreterSpec with Matchers {
 
@@ -33,6 +34,27 @@ class CustomStylesTest extends WebInterpreterSpec with Matchers {
       _    <- render(shape)
       html <- select.renderedHtml
     } yield html shouldBe """<span style="padding-top: 4px;">hola</span>"""
+
+  }
+
+  testRenderZIOSafe("dynamic custom styles can be added to shapes") { (render, select) =>
+
+    def shape(padding: Signal[Size]): Shape =
+      Shape
+        .text("padding changing text")
+        .paddingTop(padding)
+
+    for {
+      paddingRef      <- SubscriptionRef.make[Size](Size.none)
+      _               <- render(shape(paddingRef.signal))
+      htmlNoPadding   <- select.renderedHtml
+      _               <- paddingRef.set(Size.small)
+      _               <- paddingRef.changes.runHead
+      htmlWithPadding <- select.renderedHtml
+    } yield {
+      htmlNoPadding shouldBe """<span style="padding-top: 0px;">padding changing text</span>"""
+      htmlWithPadding shouldBe """<span style="padding-top: 4px;">padding changing text</span>"""
+    }
 
   }
 
