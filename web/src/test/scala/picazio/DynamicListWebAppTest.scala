@@ -1,11 +1,12 @@
 package picazio
 
+import org.scalatest.matchers.should.Matchers
 import picazio.test.*
 import picazio.test.utils.*
 import zio.*
 import zio.stream.*
 
-class DynamicListWebAppTest extends WebInterpreterSpec {
+class DynamicListWebAppTest extends WebInterpreterSpec with Matchers {
 
   testRenderZIO("In a TODO list, items can be added and removed") { (render, select) =>
 
@@ -80,7 +81,7 @@ class DynamicListWebAppTest extends WebInterpreterSpec {
 
   }
 
-  testRenderZIO("numbers in a row") { (render, select) =>
+  testRenderZIOSafe("numbers in a row") { (render, select) =>
 
     def drawNumbers(numbers: SubscriptionRef[List[Int]]) =
       Shape.row(numbers.signal.map(_.map(number => Shape.text(number.toString))))
@@ -92,13 +93,17 @@ class DynamicListWebAppTest extends WebInterpreterSpec {
       } yield ()
 
     for {
-      numbers    <- SubscriptionRef.make(List.empty[Int])
-      lastNumber <- SubscriptionRef.make(0)
-      // TODO don't wait
-      fiber <- updateNumbers(numbers, lastNumber).delay(100.milliseconds).repeat(Schedule.recurs(2)).fork
-      _     <- ZIO.attempt(render(drawNumbers(numbers)))
-      _     <- fiber.join
-    } yield true // TODO actually test
+      numbers          <- SubscriptionRef.make(List.empty[Int])
+      lastNumber       <- SubscriptionRef.make(0)
+      _                <- render(drawNumbers(numbers))
+      noNumbersYetHtml <- select.renderedHtml
+      fiber            <- updateNumbers(numbers, lastNumber).repeat(Schedule.recurs(2)).fork
+      _                <- fiber.join
+      html             <- select.renderedHtml
+    } yield {
+      noNumbersYetHtml shouldBe """<div style="display: flex; flex-direction: row; align-items: flex-start; justify-content: flex-start;"><!----></div>"""
+      html shouldBe """<div style="display: flex; flex-direction: row; align-items: flex-start; justify-content: flex-start;"><!----><span style="padding-top: 4px;">2</span><span style="padding-top: 4px;">1</span><span style="padding-top: 4px;">0</span></div>"""
+    }
 
   }
 
