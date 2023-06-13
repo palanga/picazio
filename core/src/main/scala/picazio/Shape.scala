@@ -17,6 +17,7 @@ object Shape {
   def button(content: String): Shape                                      = Button(content)
   def column(content: Shape*): Shape                                      = StaticColumn(content)
   def column(content: Signal[Seq[Shape]]): Shape                          = DynamicColumn(content)
+  def column(content: Stream[Throwable, Shape]): Shape                    = StreamColumn(content)
   def row(content: Shape*): Shape                                         = StaticRow(content)
   def row(content: Signal[Seq[Shape]]): Shape                             = DynamicRow(content)
 
@@ -28,6 +29,7 @@ object Shape {
   private[picazio] final case class Button(content: String)                                                extends Shape
   private[picazio] final case class StaticColumn(content: Seq[Shape])                                      extends Shape
   private[picazio] final case class DynamicColumn(content: Signal[Seq[Shape]])                             extends Shape
+  private[picazio] final case class StreamColumn(content: Stream[Throwable, Shape])                        extends Shape
   private[picazio] final case class StaticRow(content: Seq[Shape])                                         extends Shape
   private[picazio] final case class DynamicRow(content: Signal[Seq[Shape]])                                extends Shape
   private[picazio] final case class OnClick(action: Task[Unit], inner: Shape)                              extends Shape

@@ -27,6 +27,7 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
       case _: Shape.Button         => ButtonStyles.default
       case _: StaticColumn         => Styles.empty
       case _: DynamicColumn        => Styles.empty
+      case _: StreamColumn         => Styles.empty
       case _: StaticRow            => Styles.empty
       case _: DynamicRow           => Styles.empty
       case Styled(styles, inner)   => defaultStylesForShape(inner) ++ styles

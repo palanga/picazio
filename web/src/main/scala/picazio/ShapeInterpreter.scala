@@ -5,6 +5,7 @@ import com.raquo.laminar.nodes.ReactiveElement
 import org.scalajs.dom.Element
 import picazio.Shape.*
 import picazio.signal.toLaminarSignal
+import picazio.stream.toLaminarCommandStream
 import picazio.style.Theme
 import zio.*
 
@@ -57,6 +58,15 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
       case DynamicColumn(content) =>
         div(
           children <-- toLaminarSignal(content).map(_.map(asLaminarElement)),
+          display.flex,
+          flexDirection.column,
+          alignItems.flexStart,
+          justifyContent.flexStart,
+        )
+
+      case StreamColumn(content) =>
+        div(
+          children.command <-- toLaminarCommandStream(content, asLaminarElement, CollectionCommand.Append.apply),
           display.flex,
           flexDirection.column,
           alignItems.flexStart,
