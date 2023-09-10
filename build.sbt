@@ -7,7 +7,7 @@ val ALL_SCALA               = Seq(SCALA_3, SCALA_2)
 val ZIO_VERSION             = "2.0.15"
 val LAMINAR_VERSION         = "15.0.0"
 val SCALA_JAVA_TIME_VERSION = "2.5.0"
-val SCALA_TEST_VERSION      = "3.2.16"
+val SCALA_TEST_VERSION      = "3.2.17"
 
 import org.scalajs.jsenv.selenium.SeleniumJSEnv
 import org.openqa.selenium.chrome.ChromeOptions
