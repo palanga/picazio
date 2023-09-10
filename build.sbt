@@ -1,7 +1,7 @@
 name := "picazio"
 
 val SCALA_2                 = "2.13.11"
-val SCALA_3                 = "3.3.0"
+val SCALA_3                 = "3.3.1"
 val MAIN_SCALA              = SCALA_2
 val ALL_SCALA               = Seq(SCALA_3, SCALA_2)
 val ZIO_VERSION             = "2.0.15"
