@@ -1,7 +1,7 @@
 package picazio.test
 
 import org.scalajs.dom.html.*
-import org.scalajs.dom.{Element, NodeList}
+import org.scalajs.dom.{ Element, NodeList }
 
 trait Selector {
   def selectAll(query: String): NodeList[org.scalajs.dom.Element]

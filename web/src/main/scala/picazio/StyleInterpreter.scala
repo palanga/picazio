@@ -34,6 +34,7 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
       case OnClick(_, inner)       => defaultStylesForShape(inner) ++ OnClickStyles.default
       case OnInput(_, inner)       => defaultStylesForShape(inner)
       case OnInputFilter(_, inner) => defaultStylesForShape(inner)
+      case _                       => Styles.empty
     }
 
   private def applyTheme(styles: Styles): ThemedStyles =
@@ -56,7 +57,7 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
     element match {
       case html: ReactiveHtmlElement[?] => html.amend(styleModifiers)
       case svg: ReactiveSvgElement[?]   => svg
-      case _ =>
+      case _                            =>
         throw new IllegalArgumentException(
           s"ReactiveHtmlElement or ReactiveSvgElement expected. Got: ${element.getClass.getName}"
         )

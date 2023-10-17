@@ -32,7 +32,7 @@ class WebAppTest extends WebInterpreterSpec {
       object Counter {
         private var value = 0
         def increment     = ZIO.attempt(value += 1)
-        def get = {
+        def get           = {
           val result = value
           result
         }

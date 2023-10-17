@@ -8,20 +8,21 @@ val ZIO_VERSION             = "2.0.18"
 val LAMINAR_VERSION         = "15.0.0"
 val SCALA_JAVA_TIME_VERSION = "2.5.0"
 val SCALA_TEST_VERSION      = "3.2.17"
+val ZIO_HTTP_VERSION        = "3.0.0-RC2"
 
-import org.scalajs.jsenv.selenium.SeleniumJSEnv
 import org.openqa.selenium.chrome.ChromeOptions
+import org.scalajs.jsenv.selenium.SeleniumJSEnv
 
 inThisBuild(
   List(
-    scalaVersion       := MAIN_SCALA,
-    crossScalaVersions := ALL_SCALA,
-    organization       := "io.github.palanga",
-    homepage           := Some(url("https://github.com/palanga/picazio")),
-    licenses           := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+    scalaVersion           := MAIN_SCALA,
+    crossScalaVersions     := ALL_SCALA,
+    organization           := "io.github.palanga",
+    homepage               := Some(url("https://github.com/palanga/picazio")),
+    licenses               := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
     resolvers += "Sonatype OSS Releases" at "https://s01.oss.sonatype.org/content/repositories/releases",
     resolvers += "Sonatype OSS Snapshots" at "https://s01.oss.sonatype.org/content/repositories/snapshots",
-    developers := List(
+    developers             := List(
       Developer(
         "palanga",
         "Andrés González",
@@ -48,6 +49,7 @@ lazy val root =
       core,
       web,
       examples,
+      chat_example,
     )
 
 lazy val core =
@@ -68,8 +70,8 @@ lazy val web =
   (project in file("web"))
     .enablePlugins(ScalaJSPlugin)
     .settings(
-      name        := "picazio-web",
-      description := "Web interpreter for PicaZIO made with Laminar",
+      name                     := "picazio-web",
+      description              := "Web interpreter for PicaZIO made with Laminar",
       libraryDependencies ++= Seq(
         "com.raquo"         %%% "laminar"              % LAMINAR_VERSION,
         "io.github.cquiroz" %%% "scala-java-time"      % SCALA_JAVA_TIME_VERSION,
@@ -77,7 +79,7 @@ lazy val web =
         "org.scalatest"     %%% "scalatest"            % SCALA_TEST_VERSION % Test,
       ),
       Test / parallelExecution := false,
-      Test / jsEnv             := seleniumJSEnv(keepTestBrowserAlive = false),
+      Test / jsEnv             := seleniumJSEnv(keepTestBrowserAlive = true),
       commonSettings,
     ).dependsOn(core)
 
@@ -100,6 +102,26 @@ lazy val examples =
       web,
     )
 
+lazy val chat_example =
+  (project in file("chat-example"))
+    .enablePlugins(ScalaJSPlugin)
+    .settings(
+      name                            := "chat-example",
+      publish / skip                  := true,
+      Test / skip                     := true,
+      scalaJSUseMainModuleInitializer := true,
+      Compile / mainClass             := Some("examples.chat.ui.Main"),
+      commonSettings,
+      libraryDependencies ++= Seq(
+        "dev.zio" %% "zio-http" % ZIO_HTTP_VERSION,
+        "dev.zio" %% "zio-json" % "0.5.0",
+      ),
+    )
+    .dependsOn(
+      core,
+      web,
+    )
+
 val commonSettings = Def.settings(
   scalacOptions ++= commonOptions ++ versionSpecificOptions(scalaVersion.value)
 )
@@ -112,7 +134,6 @@ def commonOptions = Seq(
   "-language:higherKinds",
   "-language:existentials",
   "-unchecked",
-  "-Wconf:msg=package object inheritance is deprecated:info-summary",
 )
 
 def versionSpecificOptions(scalaVersion: String) =
@@ -128,5 +149,6 @@ val scala3Options = Seq(
 )
 
 val scala2Options = Seq(
-  "-Xsource:3"
+  "-Xsource:3",
+  "-Wconf:msg=package object inheritance is deprecated:info-summary",
 )

@@ -21,4 +21,16 @@ object stream {
     commandBus.events
   }
 
+  private[picazio] def toLaminarCommandStream[A](
+    streamZIO: Task[Stream[Throwable, A]],
+    asLaminarElement: A => ReactiveElement[Element],
+    command: ReactiveElement[Element] => CollectionCommand.Base,
+  )(implicit runtime: Runtime[Any], unsafe: Unsafe): EventStream[CollectionCommand.Base] = {
+    val commandBus = new EventBus[CollectionCommand.Base]
+    runtime.unsafe.runToFuture(
+      streamZIO.flatMap(_.map(asLaminarElement andThen command andThen commandBus.emit).runDrain)
+    )
+    commandBus.events
+  }
+
 }

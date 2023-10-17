@@ -16,13 +16,13 @@ object Signal {
   def fromRef[A](ref: SubscriptionRef[A]) = new SingleSignal(ref)
 }
 
-private[picazio] final class SingleSignal[A](underlying: SubscriptionRef[A]) extends Signal[A] {
+final private[picazio] class SingleSignal[A](underlying: SubscriptionRef[A]) extends Signal[A] {
   override def get: ZIO[Any, Nothing, A]         = underlying.get
   override def changes: ZStream[Any, Nothing, A] = underlying.changes
   override def map[B](f: A => B): Signal[B]      = new MappedSignal(underlying, f)
 }
 
-private[picazio] final class MappedSignal[A, B](underlying: SubscriptionRef[A], f: A => B) extends Signal[B] {
+final private[picazio] class MappedSignal[A, B](underlying: SubscriptionRef[A], f: A => B) extends Signal[B] {
   override def get: ZIO[Any, Nothing, B]         = underlying.get.map(f)
   override def changes: ZStream[Any, Nothing, B] = underlying.changes.map(f)
   override def map[C](f: B => C): Signal[C]      = new MappedSignal(underlying, f compose this.f)

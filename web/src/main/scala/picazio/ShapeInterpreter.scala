@@ -1,6 +1,6 @@
 package picazio
 
-import com.raquo.laminar.api.L.{button as laminarButton, *}
+import com.raquo.laminar.api.L.{ button as laminarButton, * }
 import com.raquo.laminar.nodes.ReactiveElement
 import org.scalajs.dom.Element
 import picazio.Shape.*
@@ -73,6 +73,15 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           justifyContent.flexStart,
         )
 
+      case ZIOStreamColumn(content) =>
+        div(
+          children.command <-- toLaminarCommandStream(content, asLaminarElement, CollectionCommand.Append.apply),
+          display.flex,
+          flexDirection.column,
+          alignItems.flexStart,
+          justifyContent.flexStart,
+        )
+
       case StaticRow(content) =>
         div(
           content.map(asLaminarElement),
@@ -92,7 +101,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
         )
 
       case OnClick(task, inner) =>
-        val runOnClick = onClick --> { _ => runtime.unsafe.run(task) }
+        val runOnClick = onClick --> { _ => runtime.unsafe.runToFuture(task) }
         asLaminarElement(inner).amend(runOnClick)
 
       case OnInput(action, TextInput(_placeholder)) =>
@@ -126,6 +135,10 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
             onInput.mapToValue --> { current => handleOnInput(current) },
           ),
         )
+
+      case OnKeyPressed(action, inner) =>
+        val runOnKeyPressed = onKeyDown --> { event => runtime.unsafe.runToFuture(action(event.keyCode)) }
+        asLaminarElement(inner).amend(runOnKeyPressed)
 
       case OnInputFilter(filter, SubscribedTextInput(_placeholder, ref)) =>
         input(

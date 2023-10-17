@@ -1,7 +1,7 @@
 package picazio.test
 
 import org.scalajs.dom.html.Input
-import org.scalajs.dom.{Event, HTMLElement}
+import org.scalajs.dom.{ Event, HTMLElement }
 import zio.*
 import zio.stream.*
 

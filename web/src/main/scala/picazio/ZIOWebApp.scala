@@ -1,8 +1,10 @@
 package picazio
 
-import com.raquo.laminar.api.L.renderOnDomContentLoaded
+import com.raquo.laminar.api.L.*
 import picazio.style.Theme
 import zio.*
+
+import scala.concurrent.ExecutionContext
 
 trait ZIOWebApp {
 
@@ -12,13 +14,16 @@ trait ZIOWebApp {
     ZEnvironment[Theme](Theme.default)
   }
 
+  implicit private def executionContext: ExecutionContext = scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+
   final def main(args0: Array[String]): Unit =
     Unsafe.unsafe { implicit unsafe =>
-      val shape: Shape = runtime.unsafe.run(root).getOrThrow()
-      renderOnDomContentLoaded(
-        org.scalajs.dom.document.querySelector("#picazio-root"),
-        new ShapeInterpreter().asLaminarElement(shape),
-      )
+      runtime.unsafe.runToFuture(root.logError).map { shape =>
+        render(
+          org.scalajs.dom.document.querySelector("#picazio-root"),
+          new ShapeInterpreter().asLaminarElement(shape),
+        )
+      }
     }
 
 }
