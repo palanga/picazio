@@ -1,8 +1,8 @@
 package picazio
 
 import com.raquo.laminar.api.L.{ button as laminarButton, * }
-import com.raquo.laminar.nodes.ReactiveElement
-import org.scalajs.dom.Element
+import com.raquo.laminar.nodes.*
+import org.scalajs.dom.{ console, Element }
 import picazio.Shape.*
 import picazio.signal.toLaminarSignal
 import picazio.stream.toLaminarCommandStream
@@ -25,7 +25,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
       case Text(content) => span(child.text <-- toLaminarSignal(content))
 
       case TextInput(_placeholder) =>
-        println("Using a text input without an onInput handler is unrecommended")
+        console.warn("Using a text input without an onInput handler has no sense.")
         input(placeholder := _placeholder)
 
       case SubscribedTextInput(_placeholder, ref) =>
@@ -38,7 +38,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
         )
 
       case SignaledTextInput(_placeholder, signal) =>
-        println("Using a text input without an onInput handler is unrecommended")
+        console.warn("Using a text input without an onInput handler has no sense.")
         input(
           placeholder := _placeholder,
           value <-- toLaminarSignal(signal),
@@ -151,6 +151,8 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           ),
         )
 
+      case Focused(inner) => amendHtmlOrEcho(asLaminarElement(inner))(onMountFocus)
+
       case Styled(_, inner) => asLaminarElement(inner)
 
       case OnInput(action, Styled(_, inner)) => asLaminarElement(OnInput(action, inner))
@@ -170,5 +172,19 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
     }
 
   }
+
+  private def amendHtmlOrEcho(
+    element: ReactiveElement[Element]
+  )(modifier: Modifier[ReactiveHtmlElement.Base]): ReactiveElement[Element] =
+    element match {
+      case html: ReactiveHtmlElement[?] => html.amend(modifier)
+      case svg: ReactiveSvgElement[?]   =>
+        console.warn("Applying a modifier to an svg has no effect.")
+        svg
+      case _                            =>
+        throw new IllegalArgumentException(
+          s"ReactiveHtmlElement or ReactiveSvgElement expected. Got: ${element.getClass.getName}"
+        )
+    }
 
 }

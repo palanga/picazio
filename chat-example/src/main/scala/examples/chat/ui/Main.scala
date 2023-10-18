@@ -31,11 +31,14 @@ object Main extends ZIOWebApp {
   private def drawMessageInput(chatRoom: ChatRoom, currentMessage: SubscriptionRef[String]): Shape = {
 
     val sendCurrentMessageAndEraseInput: ZIO[Any, Nothing, Unit] =
-      currentMessage.get.flatMap(chatRoom.sendMessage) *> currentMessage.set("")
+      currentMessage.get.flatMap(message => chatRoom.sendMessage(message).when(message.nonEmpty)) *>
+        currentMessage.set("")
 
     Shape.row(
-      Shape.textInput("write a message...", currentMessage)
-        .onKeyPressed(key => sendCurrentMessageAndEraseInput.when(key == 13).unit),
+      Shape
+        .textInput("write a message...", currentMessage)
+        .onKeyPressed(key => sendCurrentMessageAndEraseInput.when(key == 13).unit)
+        .focused,
       Shape.button("SEND").onClick(sendCurrentMessageAndEraseInput),
     )
 

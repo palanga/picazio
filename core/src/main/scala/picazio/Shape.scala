@@ -38,6 +38,7 @@ object Shape {
   final private[picazio] case class OnInput(action: String => Task[Unit], inner: Shape)                    extends Shape
   final private[picazio] case class OnKeyPressed(action: Int => Task[Unit], inner: Shape)                  extends Shape
   final private[picazio] case class OnInputFilter(filter: String => Boolean, inner: Shape)                 extends Shape
+  final private[picazio] case class Focused(inner: Shape)                                                  extends Shape
   final private[picazio] case class Styled(styles: Styles, inner: Shape)                                   extends Shape
 
 }
@@ -63,5 +64,10 @@ sealed trait Shape {
    * Filter out the values this text input allows.
    */
   final def onInputFilter(filter: String => Boolean): Shape = Shape.OnInputFilter(filter, this)
+
+  /**
+   * Focus this shape on mount.
+   */
+  final def focused: Shape = Shape.Focused(this)
 
 }
