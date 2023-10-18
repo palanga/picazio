@@ -94,7 +94,7 @@ lazy val examples =
       publish / skip                  := true,
       Test / skip                     := true,
       scalaJSUseMainModuleInitializer := true,
-      Compile / mainClass             := Some("examples.clock.Main"),
+      Compile / mainClass             := Some("examples.hello.Main"),
       commonSettings,
     )
     .dependsOn(

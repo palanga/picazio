@@ -7,7 +7,7 @@ import zio.stream.*
 
 object Main extends ZIOWebApp {
 
-  val scope = ZLayer.succeed(Scope.global)
+  private val scope = ZLayer.succeed(Scope.global)
 
   override def root =
     (for {
@@ -15,7 +15,7 @@ object Main extends ZIOWebApp {
       currentMessage <- SubscriptionRef.make("")
     } yield drawChatRoom(chatRoom, currentMessage))
       .provide(ChatRoomWebSocketClient.buildLayer("localhost", 8080))
-//      .provide(InMemoryChatRoom.buildLayer) // TODO: hangs
+//      .provide(InMemoryChatRoom.buildLayer) // backendless version
 
   private def drawChatRoom(chatRoom: ChatRoom, currentMessage: SubscriptionRef[String]): Shape =
     Shape.column(

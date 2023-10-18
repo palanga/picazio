@@ -33,7 +33,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           placeholder := _placeholder,
           controlled(
             value <-- toLaminarSignal(ref.signal),
-            onInput.mapToValue --> { current => runtime.unsafe.run(ref.setAsync(current)) },
+            onInput.mapToValue --> { current => runtime.unsafe.runToFuture(ref.setAsync(current)) },
           ),
         )
 
@@ -107,7 +107,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
       case OnInput(action, TextInput(_placeholder)) =>
         input(
           placeholder := _placeholder,
-          onInput.mapToValue --> { current => runtime.unsafe.run(action(current)) },
+          onInput.mapToValue --> { current => runtime.unsafe.runToFuture(action(current)) },
         )
 
       case OnInput(action, SubscribedTextInput(_placeholder, ref)) =>
@@ -115,7 +115,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           placeholder := _placeholder,
           controlled(
             value <-- toLaminarSignal(ref.signal),
-            onInput.mapToValue --> { current => runtime.unsafe.run(ref.setAsync(current) <* action(current)) },
+            onInput.mapToValue --> { current => runtime.unsafe.runToFuture(ref.setAsync(current) <* action(current)) },
           ),
         )
 
@@ -124,7 +124,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
         def handleOnInput(current: String): Unit = {
           state.set(current)
-          runtime.unsafe.run(action(current))
+          runtime.unsafe.runToFuture(action(current))
         }
 
         runtime.unsafe.runToFuture(signal.changes.map(value => state.set(value)).runDrain)
@@ -145,7 +145,9 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           placeholder := _placeholder,
           controlled(
             value <-- toLaminarSignal(ref.signal),
-            onInput.mapToValue --> { current => runtime.unsafe.run(ref.setAsync(current).when(filter(current))) },
+            onInput.mapToValue --> { current =>
+              runtime.unsafe.runToFuture(ref.setAsync(current).when(filter(current)))
+            },
           ),
         )
 

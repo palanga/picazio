@@ -12,7 +12,7 @@ object signal {
     signal: Signal[A]
   )(implicit runtime: Runtime[Any], unsafe: Unsafe): LaminarSignal[A] =
     LaminarSignal.fromCustomSource(
-      initial = runtime.unsafe.run(signal.get).toTry,
+      initial = runtime.unsafe.runToFuture(signal.get).value.get,
       start = (setCurrent: SetCurrentValue[A], _: GetCurrentValue[A], _, _) =>
         runtime.unsafe.runToFuture(signal.changes.map(value => setCurrent(Try(value))).runDrain),
       stop = _ => (),
