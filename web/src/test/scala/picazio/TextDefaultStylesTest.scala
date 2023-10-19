@@ -33,7 +33,7 @@ class TextDefaultStylesTest extends WebInterpreterSpec with Matchers {
     for {
       _    <- render(Shape.textInput("hola..."))
       html <- select.renderedHtml
-    } yield html shouldBe """<input placeholder="hola..." style="font-family: system-ui; font-size: 16px; padding-top: 4px; padding-bottom: 0px;">"""
+    } yield html shouldBe """<input placeholder="hola..." style="font-family: system-ui; padding: 4px 0px 0px; border-width: 0px 0px 1px; border-bottom-style: solid; font-size: 16px;">"""
   }
 
   testRenderZIOSafe("button default styles") { (render, select) =>
@@ -53,7 +53,7 @@ class TextDefaultStylesTest extends WebInterpreterSpec with Matchers {
     for {
       _    <- render(elementsInARow)
       html <- select.renderedHtml
-    } yield html shouldBe """<div style="display: flex; flex-direction: row; align-items: flex-start; justify-content: flex-start;"><span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">hola</span><input placeholder="hola..." style="font-family: system-ui; font-size: 16px; padding-top: 4px; padding-bottom: 0px;"><button style="font-family: system-ui; font-size: 16px; padding-top: 3px; padding-bottom: 1px; cursor: pointer;">HOLA</button></div>"""
+    } yield html shouldBe """<div style="display: flex; flex-direction: row; align-items: flex-start; justify-content: flex-start;"><span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">hola</span><input placeholder="hola..." style="font-family: system-ui; padding: 4px 0px 0px; border-width: 0px 0px 1px; border-bottom-style: solid; font-size: 16px;"><button style="font-family: system-ui; font-size: 16px; padding-top: 3px; padding-bottom: 1px; cursor: pointer;">HOLA</button></div>"""
   }
 
 }

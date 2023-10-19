@@ -6,6 +6,7 @@ import com.raquo.laminar.nodes.ReactiveHtmlElement.Base
 import org.scalajs.dom.Element
 import picazio.Shape.*
 import picazio.style.*
+import picazio.style.Style.*
 import zio.*
 
 import scala.util.chaining.scalaUtilChainingOps
@@ -59,14 +60,28 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
   private def applyTheme(styles: Styles): ThemedStyles = new ThemedStyles(styles, theme)
 
   private def convertToLaminarStyleSetters(themedStyles: ThemedStyles): Seq[Modifier[Base]] =
-    themedStyles.styles.values.collect {
-      case Style.MarginTop(size)     => marginTop     := (size * themedStyles.theme.sizeMultiplier).toString
-      case Style.PaddingTop(size)    => paddingTop    := (size * themedStyles.theme.sizeMultiplier).toString
-      case Style.PaddingBottom(size) => paddingBottom := (size * themedStyles.theme.sizeMultiplier).toString
-      case Style.Cursor(c)           => cursor        := c.toString.toLowerCase
-      case Style.FontSize(size)      => fontSize      := (size * themedStyles.theme.sizeMultiplier * 4).toString + "px"
+    themedStyles.styles.values.map {
+      case MarginTop(size) => marginTop := (size * themedStyles.theme.sizeMultiplier).toString + "px"
 
-      case Style.DynamicPaddingTop(size) =>
+      case PaddingTop(size)    => paddingTop    := (size * themedStyles.theme.sizeMultiplier).toString + "px"
+      case PaddingBottom(size) => paddingBottom := (size * themedStyles.theme.sizeMultiplier).toString + "px"
+      case PaddingStart(size)  => paddingLeft   := (size * themedStyles.theme.sizeMultiplier).toString + "px"
+      case PaddingEnd(size)    => paddingRight  := (size * themedStyles.theme.sizeMultiplier).toString + "px"
+
+      case BorderTopWidth(s: Size)    => borderTopWidth    := (s * themedStyles.theme.sizeMultiplier).toString + "px"
+      case BorderBottomWidth(s: Size) => borderBottomWidth := (s * themedStyles.theme.sizeMultiplier).toString + "px"
+      case BorderStartWidth(s: Size)  => borderLeftWidth   := (s * themedStyles.theme.sizeMultiplier).toString + "px"
+      case BorderEndWidth(s: Size)    => borderRightWidth  := (s * themedStyles.theme.sizeMultiplier).toString + "px"
+
+      case BorderTopStyle(line: Line)    => borderTopStyle    := line.toString.toLowerCase
+      case BorderBottomStyle(line: Line) => borderBottomStyle := line.toString.toLowerCase
+      case BorderStartStyle(line: Line)  => borderLeftStyle   := line.toString.toLowerCase
+      case BorderEndStyle(line: Line)    => borderRightStyle  := line.toString.toLowerCase
+
+      case Cursor(c)      => cursor   := c.toString.toLowerCase
+      case FontSize(size) => fontSize := (size * themedStyles.theme.sizeMultiplier * 4).toString + "px"
+
+      case DynamicPaddingTop(size) =>
         paddingTop <-- signal.toLaminarSignal(size.map(_ * themedStyles.theme.sizeMultiplier).map(_.toString))
     }
 
