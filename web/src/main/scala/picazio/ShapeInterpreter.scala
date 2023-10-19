@@ -29,12 +29,8 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
         input(placeholder := _placeholder)
 
       case SubscribedTextInput(_placeholder, ref) =>
-        input(
-          placeholder := _placeholder,
-          controlled(
-            value <-- toLaminarSignal(ref.signal),
-            onInput.mapToValue --> { current => runtime.unsafe.runToFuture(ref.setAsync(current)) },
-          ),
+        convertToLaminarReactiveElement(
+          Shape.textInput(_placeholder, ref.signal).onInput(text => ref.set(text))
         )
 
       case SignaledTextInput(_placeholder, signal) =>
@@ -115,7 +111,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           placeholder := _placeholder,
           controlled(
             value <-- toLaminarSignal(ref.signal),
-            onInput.mapToValue --> { current => runtime.unsafe.runToFuture(ref.setAsync(current) <* action(current)) },
+            onInput.mapToValue --> { current => runtime.unsafe.runToFuture(ref.set(current) <* action(current)) },
           ),
         )
 
@@ -141,13 +137,21 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
         asLaminarElement(inner).amend(runOnKeyPressed)
 
       case OnInputFilter(filter, SubscribedTextInput(_placeholder, ref)) =>
+        val state = Var("")
+
+        def action(text: String) = ref.set(text)
+
+        def handleOnInput(current: String): Unit = if (filter(current)) {
+          state.set(current)
+          runtime.unsafe.runToFuture(action(current))
+        }
+
+        runtime.unsafe.runToFuture(ref.changes.map(text => if (filter(text)) state.set(text)).runDrain)
         input(
           placeholder := _placeholder,
           controlled(
-            value <-- toLaminarSignal(ref.signal),
-            onInput.mapToValue --> { current =>
-              runtime.unsafe.runToFuture(ref.setAsync(current).when(filter(current)))
-            },
+            value <-- state.signal,
+            onInput.mapToValue --> { current => handleOnInput(current) },
           ),
         )
 
