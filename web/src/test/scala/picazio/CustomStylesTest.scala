@@ -18,7 +18,7 @@ class CustomStylesTest extends WebInterpreterSpec with Matchers {
     for {
       _    <- render(shape)
       html <- select.renderedHtml
-    } yield html shouldBe """<span style="padding-top: 16px; cursor: pointer;">hola</span>"""
+    } yield html shouldBe """<span style="font-family: system-ui; font-size: 16px; padding-top: 16px; cursor: pointer;">hola</span>"""
 
   }
 
@@ -33,7 +33,7 @@ class CustomStylesTest extends WebInterpreterSpec with Matchers {
     for {
       _    <- render(shape)
       html <- select.renderedHtml
-    } yield html shouldBe """<span style="padding-top: 4px;">hola</span>"""
+    } yield html shouldBe """<span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">hola</span>"""
 
   }
 
@@ -52,8 +52,8 @@ class CustomStylesTest extends WebInterpreterSpec with Matchers {
       _               <- paddingRef.changes.runHead
       htmlWithPadding <- select.renderedHtml
     } yield {
-      htmlNoPadding shouldBe """<span style="padding-top: 0px;">padding changing text</span>"""
-      htmlWithPadding shouldBe """<span style="padding-top: 4px;">padding changing text</span>"""
+      htmlNoPadding shouldBe """<span style="font-family: system-ui; font-size: 16px; padding-top: 0px;">padding changing text</span>"""
+      htmlWithPadding shouldBe """<span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">padding changing text</span>"""
     }
 
   }

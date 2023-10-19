@@ -102,7 +102,7 @@ class DynamicListWebAppTest extends WebInterpreterSpec with Matchers {
       html             <- select.renderedHtml
     } yield {
       noNumbersYetHtml shouldBe """<div style="display: flex; flex-direction: row; align-items: flex-start; justify-content: flex-start;"><!----></div>"""
-      html shouldBe """<div style="display: flex; flex-direction: row; align-items: flex-start; justify-content: flex-start;"><!----><span style="padding-top: 4px;">2</span><span style="padding-top: 4px;">1</span><span style="padding-top: 4px;">0</span></div>"""
+      html shouldBe """<div style="display: flex; flex-direction: row; align-items: flex-start; justify-content: flex-start;"><!----><span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">2</span><span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">1</span><span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">0</span></div>"""
     }
 
   }

@@ -79,7 +79,7 @@ lazy val web =
         "org.scalatest"     %%% "scalatest"            % SCALA_TEST_VERSION % Test,
       ),
       Test / parallelExecution := false,
-      Test / jsEnv             := seleniumJSEnv(keepTestBrowserAlive = true),
+      Test / jsEnv             := seleniumJSEnv(keepTestBrowserAlive = false),
       commonSettings,
     ).dependsOn(core)
 
