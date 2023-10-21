@@ -13,7 +13,7 @@ class CustomStylesTest extends WebInterpreterSpec with Matchers {
       Shape
         .text("hola")
         .paddingTop(Size.large)
-        .cursor(CursorVariant.Pointer)
+        .cursor(CursorVariant.pointer)
 
     for {
       _    <- render(shape)

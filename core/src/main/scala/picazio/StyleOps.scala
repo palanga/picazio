@@ -12,7 +12,7 @@ final class StyleOps(val self: Shape) extends AnyVal {
   private def addStyle(style: Style): Shape =
     self match {
       case Shape.Styled(styles, inner) => Shape.Styled(styles + style, inner)
-      case _                           => Shape.Styled(Styles.fromStyle(style), self)
+      case _                           => Shape.Styled(StyleSheet.fromStyle(style), self)
     }
 
 }

@@ -1,3 +1,3 @@
 package picazio.style
 
-private[picazio] class ThemedStyles(val styles: Styles, val theme: Theme)
+private[picazio] case class ThemedStyles(styles: StyleSheet, theme: Theme)

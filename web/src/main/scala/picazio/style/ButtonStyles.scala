@@ -1,11 +1,16 @@
 package picazio.style
 
 object ButtonStyles {
-  val default: Styles =
-    Styles.fromStyles(
+  val default: StyleSheet =
+    StyleSheet.fromStyles(
       Style.FontSize(Size.small),
-      Style.PaddingTop(Size.smallMinus),
-      Style.PaddingBottom(Size.smallest),
-      Style.Cursor(CursorVariant.Pointer),
+      Style.PaddingTop(Size.smallestPlus),
+      Style.PaddingBottom(Size.smallestPlus),
+      Style.Cursor(CursorVariant.pointer),
+      Style.BorderRadius(Size.mediumSmall),
+      Style.BorderTopStyle(Line.none),
+      Style.BorderBottomStyle(Line.none),
+      Style.BorderStartStyle(Line.none),
+      Style.BorderEndStyle(Line.none),
     )
 }

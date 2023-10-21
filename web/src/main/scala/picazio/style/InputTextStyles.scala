@@ -1,14 +1,15 @@
 package picazio.style
 
 object InputTextStyles {
-  val default: Styles =
-    Styles.fromStyles(
+  val default: StyleSheet =
+    StyleSheet.fromStyles(
       Style.FontSize(Size.small),
+      Style.Outline(Line.none),
       Style.PaddingTop(Size.small),
       Style.PaddingBottom(Size.none),
       Style.PaddingStart(Size.none),
       Style.PaddingEnd(Size.none),
-      Style.BorderBottomStyle(Line.Solid),
+      Style.BorderBottomStyle(Line.solid),
       Style.BorderBottomWidth(Size.smallest),
       Style.BorderTopWidth(Size.none),
       Style.BorderStartWidth(Size.none),

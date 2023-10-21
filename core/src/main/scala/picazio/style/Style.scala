@@ -27,6 +27,10 @@ object Style {
   case class BorderStartStyle(line: Line)  extends Style
   case class BorderEndStyle(line: Line)    extends Style
 
+  case class BorderRadius(size: Size) extends Style
+
   case class DynamicPaddingTop(size: Signal[Size]) extends Style
+
+  case class Outline(line: Line) extends Style
 
 }

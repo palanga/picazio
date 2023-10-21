@@ -1,8 +1,10 @@
 package picazio.style
 
-sealed trait CursorVariant
+final class CursorVariant private (val self: String) extends AnyVal {
+  override def toString: String = self
+}
 
 object CursorVariant {
-  case object Default extends CursorVariant
-  case object Pointer extends CursorVariant
+  val default = new CursorVariant("default")
+  val pointer = new CursorVariant("pointer")
 }

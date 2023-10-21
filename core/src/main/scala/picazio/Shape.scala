@@ -1,6 +1,6 @@
 package picazio
 
-import picazio.style.Styles
+import picazio.style.StyleSheet
 import zio.*
 import zio.stream.*
 
@@ -39,7 +39,7 @@ object Shape {
   final private[picazio] case class OnKeyPressed(action: Int => Task[Unit], inner: Shape)                  extends Shape
   final private[picazio] case class OnInputFilter(filter: String => Boolean, inner: Shape)                 extends Shape
   final private[picazio] case class Focused(inner: Shape)                                                  extends Shape
-  final private[picazio] case class Styled(styles: Styles, inner: Shape)                                   extends Shape
+  final private[picazio] case class Styled(styles: StyleSheet, inner: Shape)                               extends Shape
 
 }
 

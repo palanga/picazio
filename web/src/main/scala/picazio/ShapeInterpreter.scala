@@ -123,11 +123,11 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           runtime.unsafe.runToFuture(action(current))
         }
 
-        runtime.unsafe.runToFuture(signal.changes.map(value => state.set(value)).runDrain)
+        runtime.unsafe.runToFuture(signal.changes.map(state.set).runDrain)
         input(
           placeholder := _placeholder,
           controlled(
-            value <-- state.signal,
+            value <-- state,
             onInput.mapToValue --> { current => handleOnInput(current) },
           ),
         )
@@ -139,19 +139,17 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
       case OnInputFilter(filter, SubscribedTextInput(_placeholder, ref)) =>
         val state = Var("")
 
-        def action(text: String) = ref.set(text)
-
-        def handleOnInput(current: String): Unit = if (filter(current)) {
+        def handleOnInput(current: String): Unit = {
           state.set(current)
-          runtime.unsafe.runToFuture(action(current))
+          runtime.unsafe.runToFuture(ref.set(current))
         }
 
-        runtime.unsafe.runToFuture(ref.changes.map(text => if (filter(text)) state.set(text)).runDrain)
+        runtime.unsafe.runToFuture(ref.changes.filter(filter).map(state.set).runDrain)
         input(
           placeholder := _placeholder,
           controlled(
-            value <-- state.signal,
-            onInput.mapToValue --> { current => handleOnInput(current) },
+            value <-- state,
+            onInput.mapToValue.filter(filter) --> { current => handleOnInput(current) },
           ),
         )
 

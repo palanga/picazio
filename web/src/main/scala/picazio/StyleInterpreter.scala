@@ -37,7 +37,7 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
       .pipe(applyTypography(shape))
       .pipe(amendStyles(element))
 
-  private def defaultStylesForShape(shape: Shape): Styles =
+  private def defaultStylesForShape(shape: Shape): StyleSheet =
     shape match {
       case _: Text                 => TextStyles.default
       case _: StaticText           => TextStyles.default
@@ -45,45 +45,52 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
       case _: SubscribedTextInput  => InputTextStyles.default
       case _: SignaledTextInput    => InputTextStyles.default
       case _: Shape.Button         => ButtonStyles.default
-      case _: StaticColumn         => Styles.empty
-      case _: DynamicColumn        => Styles.empty
-      case _: StreamColumn         => Styles.empty
-      case _: StaticRow            => Styles.empty
-      case _: DynamicRow           => Styles.empty
+      case _: StaticColumn         => StyleSheet.empty
+      case _: DynamicColumn        => StyleSheet.empty
+      case _: StreamColumn         => StyleSheet.empty
+      case _: StaticRow            => StyleSheet.empty
+      case _: DynamicRow           => StyleSheet.empty
       case Styled(styles, inner)   => defaultStylesForShape(inner) ++ styles
       case OnClick(_, inner)       => defaultStylesForShape(inner) ++ OnClickStyles.default
       case OnInput(_, inner)       => defaultStylesForShape(inner)
       case OnInputFilter(_, inner) => defaultStylesForShape(inner)
-      case _                       => Styles.empty
+      case _                       => StyleSheet.empty
     }
 
-  private def applyTheme(styles: Styles): ThemedStyles = new ThemedStyles(styles, theme)
+  private def applyTheme(styles: StyleSheet): ThemedStyles = ThemedStyles(styles, theme)
 
-  private def convertToLaminarStyleSetters(themedStyles: ThemedStyles): Seq[Modifier[Base]] =
-    themedStyles.styles.values.map {
-      case MarginTop(size) => marginTop := (size * themedStyles.theme.sizeMultiplier).toString + "px"
+  private def convertToLaminarStyleSetters(themedStyles: ThemedStyles): Seq[Modifier[Base]] = {
+    val ThemedStyles(styles, Theme(sizeMultiplier, _)) = themedStyles
+    styles.values.map {
+      case MarginTop(size) => marginTop := (size * sizeMultiplier).toString + "px"
 
-      case PaddingTop(size)    => paddingTop    := (size * themedStyles.theme.sizeMultiplier).toString + "px"
-      case PaddingBottom(size) => paddingBottom := (size * themedStyles.theme.sizeMultiplier).toString + "px"
-      case PaddingStart(size)  => paddingLeft   := (size * themedStyles.theme.sizeMultiplier).toString + "px"
-      case PaddingEnd(size)    => paddingRight  := (size * themedStyles.theme.sizeMultiplier).toString + "px"
+      case PaddingTop(size)    => paddingTop    := (size * sizeMultiplier).toString + "px"
+      case PaddingBottom(size) => paddingBottom := (size * sizeMultiplier).toString + "px"
+      case PaddingStart(size)  => paddingLeft   := (size * sizeMultiplier).toString + "px"
+      case PaddingEnd(size)    => paddingRight  := (size * sizeMultiplier).toString + "px"
 
-      case BorderTopWidth(s: Size)    => borderTopWidth    := (s * themedStyles.theme.sizeMultiplier).toString + "px"
-      case BorderBottomWidth(s: Size) => borderBottomWidth := (s * themedStyles.theme.sizeMultiplier).toString + "px"
-      case BorderStartWidth(s: Size)  => borderLeftWidth   := (s * themedStyles.theme.sizeMultiplier).toString + "px"
-      case BorderEndWidth(s: Size)    => borderRightWidth  := (s * themedStyles.theme.sizeMultiplier).toString + "px"
+      case BorderTopWidth(size: Size)    => borderTopWidth    := (size * sizeMultiplier).toString + "px"
+      case BorderBottomWidth(size: Size) => borderBottomWidth := (size * sizeMultiplier).toString + "px"
+      case BorderStartWidth(size: Size)  => borderLeftWidth   := (size * sizeMultiplier).toString + "px"
+      case BorderEndWidth(size: Size)    => borderRightWidth  := (size * sizeMultiplier).toString + "px"
 
-      case BorderTopStyle(line: Line)    => borderTopStyle    := line.toString.toLowerCase
-      case BorderBottomStyle(line: Line) => borderBottomStyle := line.toString.toLowerCase
-      case BorderStartStyle(line: Line)  => borderLeftStyle   := line.toString.toLowerCase
-      case BorderEndStyle(line: Line)    => borderRightStyle  := line.toString.toLowerCase
+      case BorderTopStyle(line: Line)    => borderTopStyle    := line.toString
+      case BorderBottomStyle(line: Line) => borderBottomStyle := line.toString
+      case BorderStartStyle(line: Line)  => borderLeftStyle   := line.toString
+      case BorderEndStyle(line: Line)    => borderRightStyle  := line.toString
 
-      case Cursor(c)      => cursor   := c.toString.toLowerCase
-      case FontSize(size) => fontSize := (size * themedStyles.theme.sizeMultiplier * 4).toString + "px"
+      case BorderRadius(size) => borderRadius := (size * sizeMultiplier).toString + "px"
+
+      case Cursor(cursorVariant) => cursor := cursorVariant.toString
+
+      case FontSize(size) => fontSize := (size * sizeMultiplier * 4).toString + "px"
+
+      case Outline(line) => outline := line.toString
 
       case DynamicPaddingTop(size) =>
-        paddingTop <-- signal.toLaminarSignal(size.map(_ * themedStyles.theme.sizeMultiplier).map(_.toString))
+        paddingTop <-- signal.toLaminarSignal(size.map(_ * sizeMultiplier).map(_.toString))
     }
+  }
 
   private def amendStyles(
     element: ReactiveElement[Element]

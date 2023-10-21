@@ -1,8 +1,10 @@
 package picazio.style
 
-sealed trait Line
+final class Line private (val self: String) extends AnyVal {
+  override def toString: String = self
+}
 
 object Line {
-  case object None  extends Line
-  case object Solid extends Line
+  val none  = new Line("none")
+  val solid = new Line("solid")
 }
