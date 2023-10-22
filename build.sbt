@@ -113,8 +113,7 @@ lazy val chat_example =
       Compile / mainClass             := Some("examples.chat.ui.Main"),
       commonSettings,
       libraryDependencies ++= Seq(
-        "dev.zio" %% "zio-http" % ZIO_HTTP_VERSION,
-        "dev.zio" %% "zio-json" % "0.5.0",
+        "dev.zio" %% "zio-http" % ZIO_HTTP_VERSION
       ),
     )
     .dependsOn(
