@@ -32,9 +32,9 @@ class StreamWebAppTest extends WebInterpreterSpec with Matchers {
       _                 <- chatRoom.publish("cita bebecita")
       htmlOne           <- select.renderedHtml
     } yield {
-      noMessagesYetHtml shouldBe """<div style="display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;"><!----></div>"""
-      htmlZero shouldBe """<div style="display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;"><!----><span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">hola Nube</span></div>"""
-      htmlOne shouldBe """<div style="display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;"><!----><span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">hola Nube</span><span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">cita bebecita</span></div>"""
+      noMessagesYetHtml shouldBe """<div style="display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; width: 100%;"><!----></div>"""
+      htmlZero shouldBe """<div style="display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; width: 100%;"><!----><span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">hola Nube</span></div>"""
+      htmlOne shouldBe """<div style="display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; width: 100%;"><!----><span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">hola Nube</span><span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">cita bebecita</span></div>"""
     }).provide(scope)
 
   }

@@ -26,7 +26,10 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
       case TextInput(_placeholder) =>
         console.warn("Using a text input without an onInput handler has no sense.")
-        input(placeholder := _placeholder)
+        input(
+          placeholder := _placeholder,
+          width.percent(100),
+        )
 
       case SubscribedTextInput(_placeholder, ref) =>
         convertToLaminarReactiveElement(
@@ -38,6 +41,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
         input(
           placeholder := _placeholder,
           value <-- toLaminarSignal(signal),
+          width.percent(100),
         )
 
       case Button(content) => laminarButton(content)
@@ -49,6 +53,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           flexDirection.column,
           alignItems.flexStart,
           justifyContent.flexStart,
+          width.percent(100),
         )
 
       case DynamicColumn(content) =>
@@ -58,6 +63,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           flexDirection.column,
           alignItems.flexStart,
           justifyContent.flexStart,
+          width.percent(100),
         )
 
       case StreamColumn(content) =>
@@ -67,6 +73,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           flexDirection.column,
           alignItems.flexStart,
           justifyContent.flexStart,
+          width.percent(100),
         )
 
       case ZIOStreamColumn(content) =>
@@ -76,6 +83,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           flexDirection.column,
           alignItems.flexStart,
           justifyContent.flexStart,
+          width.percent(100),
         )
 
       case StaticRow(content) =>
@@ -85,6 +93,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           flexDirection.row,
           alignItems.flexStart,
           justifyContent.flexStart,
+          width.percent(100),
         )
 
       case DynamicRow(content) =>
@@ -94,6 +103,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           flexDirection.row,
           alignItems.flexStart,
           justifyContent.flexStart,
+          width.percent(100),
         )
 
       case OnClick(task, inner) =>
@@ -104,6 +114,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
         input(
           placeholder := _placeholder,
           onInput.mapToValue --> { current => runtime.unsafe.runToFuture(action(current)) },
+          width.percent(100),
         )
 
       case OnInput(action, SubscribedTextInput(_placeholder, ref)) =>
@@ -113,6 +124,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
             value <-- toLaminarSignal(ref.signal),
             onInput.mapToValue --> { current => runtime.unsafe.runToFuture(ref.set(current) <* action(current)) },
           ),
+          width.percent(100),
         )
 
       case OnInput(action, SignaledTextInput(_placeholder, signal)) =>
@@ -130,6 +142,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
             value <-- state,
             onInput.mapToValue --> { current => handleOnInput(current) },
           ),
+          width.percent(100),
         )
 
       case OnKeyPressed(action, inner) =>
@@ -151,6 +164,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
             value <-- state,
             onInput.mapToValue.filter(filter) --> { current => handleOnInput(current) },
           ),
+          width.percent(100),
         )
 
       case Focused(inner) => amendHtmlOrEcho(asLaminarElement(inner))(onMountFocus)
