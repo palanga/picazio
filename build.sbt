@@ -114,7 +114,7 @@ lazy val chat_example =
       commonSettings,
       libraryDependencies ++= Seq(
         "dev.zio" %% "zio-http" % ZIO_HTTP_VERSION,
-        "dev.zio" %% "zio-json" % "0.5.0",
+        "dev.zio" %% "zio-json" % "0.6.2",
       ),
     )
     .dependsOn(
