@@ -83,7 +83,7 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
 
       case Cursor(cursorVariant) => cursor := cursorVariant.toString
 
-      case FontSize(size) => fontSize := (size * sizeMultiplier * 4).toString + "px"
+      case FontSize(size) => fontSize := (size * sizeMultiplier * 2).toString + "px"
 
       case Outline(line) => outline := line.toString
 

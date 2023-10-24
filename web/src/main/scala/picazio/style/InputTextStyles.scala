@@ -3,7 +3,7 @@ package picazio.style
 object InputTextStyles {
   val default: StyleSheet =
     StyleSheet.fromStyles(
-      Style.FontSize(Size.small),
+      Style.FontSize(Size.medium),
       Style.Outline(Line.none),
       Style.PaddingTop(Size.small),
       Style.PaddingBottom(Size.none),

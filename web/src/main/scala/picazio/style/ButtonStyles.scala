@@ -3,7 +3,7 @@ package picazio.style
 object ButtonStyles {
   val default: StyleSheet =
     StyleSheet.fromStyles(
-      Style.FontSize(Size.small),
+      Style.FontSize(Size.medium),
       Style.PaddingTop(Size.smallestPlus),
       Style.PaddingBottom(Size.smallestPlus),
       Style.Cursor(CursorVariant.pointer),
