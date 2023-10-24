@@ -6,11 +6,11 @@ import zio.http.*
 
 final class ChatRoomHttpApp(chatRoom: ChatRoom) {
 
-  val app = Http.collectZIO[Request] { case Method.GET -> Root / "chatroom" / "connect" =>
-    openSocketChatRoom.toResponse
-  }
+  val routes: Routes[Any, Nothing] = Routes(
+    Method.GET / "chatroom" / "connect" -> handler(openSocketChatRoom.toResponse)
+  )
 
-  private def openSocketChatRoom: SocketApp[Any] =
+  private def openSocketChatRoom: WebSocketApp[Any] =
     Handler.webSocket { channel =>
       for {
         scope <- Scope.make.tap(_.addFinalizer(channel.shutdown))

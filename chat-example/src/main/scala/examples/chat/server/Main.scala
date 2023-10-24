@@ -4,6 +4,8 @@ import examples.chat.common.InMemoryChatRoom
 import zio.*
 import zio.http.*
 
+import java.net.InetAddress
+
 object Main extends ZIOAppDefault {
 
   override def run =
@@ -15,8 +17,10 @@ object Main extends ZIOAppDefault {
   private val app =
     for {
       chatRoomHttp <- ChatRoomHttpApp.build
-      _            <- Console.printLine("listening on port 8080")
-      _            <- Server.serve(chatRoomHttp.app)
+      localhost     = InetAddress.getLocalHost.getHostAddress
+      _            <- Console.printLine("listening on localhost:8080 in your computer")
+      _            <- Console.printLine(s"listening on $localhost:8080 in your local network")
+      _            <- Server.serve(chatRoomHttp.routes.sandbox.toHttpApp)
     } yield ()
 
 }
