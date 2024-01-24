@@ -61,6 +61,7 @@ jsEnv in Test := new org.scalajs.jsenv.selenium.SeleniumJSEnv(new org.openqa.sel
   with `npm install chromedriver --save-dev`
 * Add to your PATH variable with `export PATH=$PATH:$PWD/node_modules/.bin`
 * Run tests with `sbt test`
+* Make sure your installed Chrome version is compatible with the driver version otherwise the last step will fail.
 
 Build
 -----
