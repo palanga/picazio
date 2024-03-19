@@ -7,53 +7,97 @@ import zio.stream.SubscriptionRef
 
 class TextDefaultStylesTest extends WebInterpreterSpec with Matchers {
 
-  testRenderZIOSafe("static text default style") { (render, select) =>
-    for {
-      _    <- render(Shape.text("hola"))
-      html <- select.renderedHtml
-    } yield html shouldBe """<span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">hola</span>"""
+  testShape("static text default style") { render =>
+    render(Shape.text("hola")).map(_.styles should contain theSameElementsAs textDefaultStyles)
   }
 
-  testRenderZIOSafe("static text with on click should have the same styles but a pointer cursor.") { (render, select) =>
-    for {
-      _    <- render(Shape.text("hola").onClick(ZIO.unit))
-      html <- select.renderedHtml
-    } yield html shouldBe """<span style="font-family: system-ui; font-size: 16px; padding-top: 4px; cursor: pointer;">hola</span>"""
+  testShape("static text with on click should have the same styles but a pointer cursor.") { render =>
+    render(Shape.text("hola").onClick(ZIO.unit))
+      .map(_.styles should contain theSameElementsAs textDefaultStyles + ("cursor" -> "pointer"))
   }
 
-  testRenderZIOSafe("dynamic text default style") { (render, select) =>
+  testShape("dynamic text default style") { render =>
     for {
       ref  <- SubscriptionRef.make("hola")
-      _    <- render(Shape.text(ref.signal))
-      html <- select.renderedHtml
-    } yield html shouldBe """<span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">hola</span>"""
+      root <- render(Shape.text(ref.signal))
+    } yield root.styles should contain theSameElementsAs textDefaultStyles
   }
 
-  testRenderZIOSafe("text input default styles") { (render, select) =>
-    for {
-      _    <- render(Shape.textInput("hola..."))
-      html <- select.renderedHtml
-    } yield html shouldBe """<input placeholder="hola..." style="width: 100%; font-family: system-ui; padding: 4px 0px 0px; border-width: 0px 0px 1px; border-bottom-style: solid; font-size: 16px; outline: none;">"""
+  testShape("text input default styles") { render =>
+    render(Shape.textInput("hola...")).map(_.styles should contain theSameElementsAs textInputDefaultStyles)
   }
 
-  testRenderZIOSafe("button default styles") { (render, select) =>
-    for {
-      _    <- render(Shape.button("HOLA"))
-      html <- select.renderedHtml
-    } yield html shouldBe """<button style="font-family: system-ui; padding-bottom: 2px; border-style: none; padding-top: 2px; font-size: 16px; cursor: pointer; border-radius: 6px;">HOLA</button>"""
+  testShape("button default styles") { render =>
+    render(Shape.button("HOLA")).map(_.styles should contain theSameElementsAs buttonDefaultStyles)
   }
 
-  testRenderZIOSafe("text, input and button should have the same height by default") { (render, select) =>
+  testShape("text, input and button should have the same height by default") { render =>
+
     val elementsInARow =
       Shape.row(
         Shape.text("hola"),
         Shape.textInput("hola..."),
         Shape.button("HOLA"),
       )
-    for {
-      _    <- render(elementsInARow)
-      html <- select.renderedHtml
-    } yield html shouldBe """<div style="display: flex; flex-direction: row; align-items: flex-start; justify-content: flex-start; width: 100%;"><span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">hola</span><input placeholder="hola..." style="width: 100%; font-family: system-ui; padding: 4px 0px 0px; border-width: 0px 0px 1px; border-bottom-style: solid; font-size: 16px; outline: none;"><button style="font-family: system-ui; padding-bottom: 2px; border-style: none; padding-top: 2px; font-size: 16px; cursor: pointer; border-radius: 6px;">HOLA</button></div>"""
+
+    render(elementsInARow)
+      .map { root =>
+
+        val span   = root.head
+        val input  = root.tail.head
+        val button = root.tail.tail.head
+
+        span.styles should contain allElementsOf RenderedStyleSet(
+          "font-family" -> "system-ui",
+          "font-size"   -> "16px",
+          "padding-top" -> "4px",
+        )
+
+        input.styles should contain allElementsOf RenderedStyleSet(
+          "border-bottom-style" -> "solid",
+          "font-family"         -> "system-ui",
+          "border-width"        -> "0px 0px 1px",
+          "font-size"           -> "16px",
+          "padding"             -> "4px 0px 0px",
+          "outline"             -> "none",
+        )
+
+        button.styles should contain allElementsOf RenderedStyleSet(
+          "font-family"    -> "system-ui",
+          "padding-bottom" -> "2px",
+          "border-style"   -> "none",
+          "padding-top"    -> "2px",
+          "font-size"      -> "16px",
+        )
+
+      }
+
   }
+
+  private val textDefaultStyles = RenderedStyleSet(
+    "font-family" -> "system-ui",
+    "font-size"   -> "16px",
+    "padding-top" -> "4px",
+  )
+
+  private val textInputDefaultStyles = RenderedStyleSet(
+    "width"               -> "100%",
+    "padding"             -> "4px 0px 0px",
+    "outline"             -> "none",
+    "font-family"         -> "system-ui",
+    "border-width"        -> "0px 0px 1px",
+    "font-size"           -> "16px",
+    "border-bottom-style" -> "solid",
+  )
+
+  private val buttonDefaultStyles = RenderedStyleSet(
+    "font-family"    -> "system-ui",
+    "padding-bottom" -> "2px",
+    "border-style"   -> "none",
+    "padding-top"    -> "2px",
+    "font-size"      -> "16px",
+    "border-radius"  -> "6px",
+    "cursor"         -> "pointer",
+  )
 
 }

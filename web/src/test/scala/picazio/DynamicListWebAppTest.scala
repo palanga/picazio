@@ -2,13 +2,12 @@ package picazio
 
 import org.scalatest.matchers.should.Matchers
 import picazio.test.*
-import picazio.test.utils.*
 import zio.*
 import zio.stream.*
 
 class DynamicListWebAppTest extends WebInterpreterSpec with Matchers {
 
-  testRenderZIO("In a TODO list, items can be added and removed") { (render, select) =>
+  testShape("In a TODO list, items can be added and removed") { render =>
 
     class TodosState(val items: SubscriptionRef[List[Item]], val newTodoTitleInput: SubscriptionRef[String]) {
 
@@ -60,28 +59,26 @@ class DynamicListWebAppTest extends WebInterpreterSpec with Matchers {
       )
 
     for {
-      state               <- TodosState.build
-      _                   <- ZIO.attempt(render(drawTodosPage(state)))
-      input               <- ZIO.attempt(select.selectInputWithPlaceholder("TODO item title..."))
-      addItemButton       <- ZIO.attempt(select.selectButtonWithText("ADD"))
-      _                   <- inputText(input, "sleep")
-      _                   <- clickAndWait(addItemButton, state.items)
-      _                   <- inputText(input, "eat")
-      _                   <- clickAndWait(addItemButton, state.items)
-      doneEatButton       <- ZIO.attempt(select.selectButtonWithText("DONE eat"))
-      maxItemsCount       <- ZIO.attempt(select.firstElementChild.children(1).childElementCount)
-      _                   <- clickAndWait(doneEatButton, state.items)
-      eatDoneItemsCount   <- ZIO.attempt(select.firstElementChild.children(1).childElementCount)
-      doneSleepButton     <- ZIO.attempt(select.selectButtonWithText("DONE sleep"))
-      _                   <- clickAndWait(doneSleepButton, state.items)
-      sleepDoneItemsCount <- ZIO.attempt(select.firstElementChild.children(1).childElementCount)
-    } yield maxItemsCount == 2
-      && eatDoneItemsCount == 1
-      && sleepDoneItemsCount == 0
-
+      state          <- TodosState.build
+      root           <- render(drawTodosPage(state))
+      input           = root.head.head
+      addItemButton   = root.head.tail.head
+      _              <- input.write("sleep")
+      _              <- addItemButton.click
+      _              <- input.write("eat")
+      _              <- addItemButton.click
+      itemsList       = root.tail.head
+      _              <- debounce(itemsList should have size 2)
+      doneSleepButton = itemsList.tail.head.tail.head
+      _              <- doneSleepButton.click
+      _              <- debounce(itemsList should have size 1)
+      doneEatButton   = itemsList.head.tail.head
+      _              <- doneEatButton.click
+      result         <- debounce(itemsList should have size 0)
+    } yield result
   }
 
-  testRenderZIOSafe("numbers in a row") { (render, select) =>
+  testShape("numbers in a row") { render =>
 
     def drawNumbers(numbers: SubscriptionRef[List[Int]]) =
       Shape.row(numbers.signal.map(_.map(number => Shape.text(number.toString))))
@@ -93,17 +90,13 @@ class DynamicListWebAppTest extends WebInterpreterSpec with Matchers {
       } yield ()
 
     for {
-      numbers          <- SubscriptionRef.make(List.empty[Int])
-      lastNumber       <- SubscriptionRef.make(0)
-      _                <- render(drawNumbers(numbers))
-      noNumbersYetHtml <- select.renderedHtml
-      fiber            <- updateNumbers(numbers, lastNumber).repeat(Schedule.recurs(2)).fork
-      _                <- fiber.join
-      html             <- select.renderedHtml
-    } yield {
-      noNumbersYetHtml shouldBe """<div style="display: flex; flex-direction: row; align-items: flex-start; justify-content: flex-start; width: 100%;"><!----></div>"""
-      html shouldBe """<div style="display: flex; flex-direction: row; align-items: flex-start; justify-content: flex-start; width: 100%;"><!----><span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">2</span><span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">1</span><span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">0</span></div>"""
-    }
+      numbers    <- SubscriptionRef.make(List.empty[Int])
+      lastNumber <- SubscriptionRef.make(0)
+      root       <- render(drawNumbers(numbers))
+      _          <- debounce(root shouldBe empty)
+      _          <- updateNumbers(numbers, lastNumber).repeat(Schedule.recurs(2))
+      result     <- debounce(root should have size 3)
+    } yield result
 
   }
 

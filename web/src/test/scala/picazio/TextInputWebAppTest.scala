@@ -1,13 +1,13 @@
 package picazio
 
+import org.scalatest.matchers.should.Matchers
 import picazio.test.*
-import picazio.test.utils.*
 import zio.*
 import zio.stream.*
 
-class TextInputWebAppTest extends WebInterpreterSpec {
+class TextInputWebAppTest extends WebInterpreterSpec with Matchers {
 
-  testRenderZIO("echo text input") { (render, select) =>
+  testShape("echo text input") { render =>
 
     def textInputWithEcho(textRef: SubscriptionRef[String]) =
       Shape.column(
@@ -16,18 +16,27 @@ class TextInputWebAppTest extends WebInterpreterSpec {
       )
 
     for {
-      textRef      <- SubscriptionRef.make("")
-      _            <- ZIO.attempt(render(textInputWithEcho(textRef)))
-      input        <- ZIO.attempt(select.selectInputWithPlaceholder("start typing..."))
-      echoTextSpan <- ZIO.attempt(select.selectSpanWithText(""))
-      emptyText     = echoTextSpan.textContent
-      _            <- inputTextAndWait(input, "hola", textRef)
-      echoedText    = echoTextSpan.textContent
-    } yield emptyText == "" && echoedText == "hola"
+      textRef     <- SubscriptionRef.make("")
+      root        <- render(textInputWithEcho(textRef))
+      input        = root.head
+      echoTextSpan = root.tail.head
+      emptyText    = echoTextSpan.text
+      _           <- input.write("hola")
+      _           <- debounce
+      echoedText   = echoTextSpan.text
+    } yield {
+      emptyText shouldBe empty
+      echoedText shouldBe "hola"
+    }
 
   }
 
-  testRenderZIO("reverse echo") { (render, select) =>
+  /**
+   * TODO: When editing, the caret goes to the end of the input every time a key
+   * is pressed. This bug doesn't happen in the centimeters/inches test, where
+   * we build both inputs from signals instead of just refs
+   */
+  testShape("reverse echo") { render =>
 
     def textInputWithReversedEcho(textRef: SubscriptionRef[String], textRefReversed: SubscriptionRef[String]) =
       Shape.column(
@@ -42,24 +51,27 @@ class TextInputWebAppTest extends WebInterpreterSpec {
     for {
       textRef         <- SubscriptionRef.make("")
       textRefReversed <- SubscriptionRef.make("")
-      _               <- ZIO.attempt(render(textInputWithReversedEcho(textRef, textRefReversed)))
-      input           <- ZIO.attempt(select.selectInputWithPlaceholder("start typing..."))
-      inputReversed   <- ZIO.attempt(select.selectInputWithPlaceholder("start typing in reverse..."))
-      _               <- inputText(input, "hola")
-      _               <- textRef.changes.runHead
-      _               <- textRefReversed.changes.runHead
-      text             = input.value
-      textReversed     = inputReversed.value
-      _               <- inputText(inputReversed, "neuquen")
-      _               <- textRef.changes.runHead
-      _               <- textRefReversed.changes.runHead
-      neuquen          = input.value
-      neuquenReversed  = inputReversed.value
-    } yield text == "hola" && textReversed == "aloh" && neuquen == "neuquen" && neuquenReversed == "neuquen"
+      root            <- render(textInputWithReversedEcho(textRef, textRefReversed))
+      input            = root.head
+      inputReversed    = root.tail.head
+      _               <- input.write("hola")
+      _               <- debounce
+      text             = input.text
+      textReversed     = inputReversed.text
+      _               <- inputReversed.write("neuquen")
+      _               <- debounce
+      neuquen          = input.text
+      neuquenReversed  = inputReversed.text
+    } yield {
+      text shouldBe "hola"
+      textReversed shouldBe "aloh"
+      neuquen shouldBe "neuquen"
+      neuquenReversed shouldBe "neuquen"
+    }
 
   }
 
-  testRenderZIO("two different inputs that reads from a signal and edit each other") { (render, select) =>
+  testShape("two different inputs that reads from a signal and edit each other") { render =>
 
     def inchesToCentimetersConverter(inchesRef: SubscriptionRef[Double], centimetersRef: SubscriptionRef[Double]) = {
 
@@ -93,25 +105,26 @@ class TextInputWebAppTest extends WebInterpreterSpec {
     for {
       inchesRef            <- SubscriptionRef.make(0.0)
       centimetersRef       <- SubscriptionRef.make(0.0)
-      _                    <- ZIO.attempt(render(inchesToCentimetersConverter(inchesRef, centimetersRef)))
-      centimeters          <- ZIO.attempt(select.selectInputWithPlaceholder("centimeters"))
-      inches               <- ZIO.attempt(select.selectInputWithPlaceholder("inches"))
-      _                    <- inputText(centimeters, "254")
-      _                    <- inchesRef.changes.runHead
-      _                    <- centimetersRef.changes.runHead
-      inches_100            = inches.value
-      _                    <- inputText(inches, "1")
-      _                    <- inchesRef.changes.runHead
-      _                    <- centimetersRef.changes.runHead
-      centimeters_2_54      = centimeters.value
-      _                    <- inputText(inches, "invalid number")
-      _                    <- inchesRef.changes.runHead
-      _                    <- centimetersRef.changes.runHead
-      centimetersNotUpdated = centimeters.value
-    } yield inches_100 == "100" && centimeters_2_54 == "2.54" && centimetersNotUpdated == centimeters_2_54
+      root                 <- render(inchesToCentimetersConverter(inchesRef, centimetersRef))
+      centimeters           = root.head
+      inches                = root.tail.head
+      _                    <- centimeters.write("254")
+      _                    <- debounce
+      inches_100            = inches.text
+      _                    <- inches.write("1")
+      _                    <- debounce
+      centimeters_2_54      = centimeters.text
+      _                    <- inches.write("invalid number")
+      _                    <- debounce
+      centimetersNotUpdated = centimeters.text
+    } yield {
+      inches_100 shouldBe "100"
+      centimeters_2_54 shouldBe "2.54"
+      centimetersNotUpdated shouldBe centimeters_2_54
+    }
   }
 
-  testRenderZIO("only numbers text input") { (render, select) =>
+  testShape("only numbers text input") { render =>
 
     def numbersInputWithEcho(inputState: SubscriptionRef[String]) =
       Shape.column(
@@ -121,21 +134,23 @@ class TextInputWebAppTest extends WebInterpreterSpec {
 
     for {
       inputState               <- SubscriptionRef.make("")
-      _                        <- ZIO.attempt(render(numbersInputWithEcho(inputState)))
-      numbersInput             <- ZIO.attempt(select.selectInputWithPlaceholder("numbers"))
-      numbersEcho              <- ZIO.attempt(select.selectSpanWithText(""))
-      _                        <- inputText(numbersInput, "107")
-      _                        <- inputState.changes.runHead
-      number_107                = numbersInput.value
-      number_107_echo           = numbersEcho.textContent
-      _                        <- inputText(numbersInput, "invalid number")
-      _                        <- inputState.changes.runHead
-      number_107_unchanged      = numbersInput.value
-      number_107_echo_unchanged = numbersEcho.textContent
-    } yield number_107 == "107"
-      && number_107_echo == "107"
-      && number_107_unchanged == "107"
-      && number_107_echo_unchanged == "107"
+      root                     <- render(numbersInputWithEcho(inputState))
+      numbersInput              = root.head
+      numbersEcho               = root.tail.head
+      _                        <- numbersInput.write("107")
+      _                        <- debounce
+      number_107                = numbersInput.text
+      number_107_echo           = numbersEcho.text
+      _                        <- numbersInput.write("invalid number")
+      _                        <- debounce
+      number_107_unchanged      = numbersInput.text
+      number_107_echo_unchanged = numbersEcho.text
+    } yield {
+      number_107 shouldBe "107"
+      number_107_echo shouldBe "107"
+      number_107_unchanged shouldBe "107"
+      number_107_echo_unchanged shouldBe "107"
+    }
   }
 
 }

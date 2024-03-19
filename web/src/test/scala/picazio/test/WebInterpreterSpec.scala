@@ -20,47 +20,17 @@ trait WebInterpreterSpec extends AsyncFunSuite {
     ZEnvironment[Theme](Theme.default)
   }
 
-  def testRender(testName: String)(f: (RendererUnsafe, Selector) => Boolean): Unit =
-    test(testName)(assert(f(render(testName), SelectorFromNode(testId(testName)))))
-
-  def testRenderZIO(testName: String)(f: (RendererUnsafe, Selector) => Task[Boolean]): Unit =
-    testRenderFuture(testName)(unsafeRunToFuture(f))
-
-  def testRenderZIOSafe(testName: String)(f: (RendererZIO, SelectorZIO) => Task[Assertion]): Unit =
-    testRenderZIOSelectZIO(testName)(asRendererUnsafe(f))
-
-  private def testRenderZIOSelectZIO(testName: String)(f: (RendererUnsafe, SelectorZIO) => Task[Assertion]): Unit =
-    testRenderFutureZIO(testName)(unsafeRunToFutureSelectZIO(f))
-
-  private def asRendererUnsafe(
-    f: (RendererZIO, SelectorZIO) => Task[Assertion]
-  ): (RendererUnsafe, SelectorZIO) => Task[Assertion] =
-    (renderUnsafe, select) => f(shape => ZIO.attempt(renderUnsafe(shape)), select)
-
-  private def testRenderFuture(testName: String)(f: (RendererUnsafe, Selector) => Future[Boolean]): Unit =
-    test(testName)(f(render(testName), SelectorFromNode(testId(testName))).map(assert(_)))
-
-  private def testRenderFutureZIO(testName: String)(f: (RendererUnsafe, SelectorZIO) => Future[Assertion]): Unit =
-    test(testName)(f(render(testName), SelectorFromNodeZIO(testId(testName))))
-
-  private def unsafeRunToFuture(
-    f: (RendererUnsafe, Selector) => Task[Boolean]
-  ): (RendererUnsafe, Selector) => CancelableFuture[Boolean] =
-    (renderer, selector) =>
+  def testShape(testName: String)(f: Renderer => Task[Assertion]): Unit =
+    test(testName)(
       Unsafe.unsafe { implicit unsafe =>
-        runtime.unsafe.runToFuture(f(renderer, selector))
+        runtime.unsafe.runToFuture(f(render(testName)(_)))
       }
+    )
 
-  private def unsafeRunToFutureSelectZIO(
-    f: (RendererUnsafe, SelectorZIO) => Task[Assertion]
-  ): (RendererUnsafe, SelectorZIO) => CancelableFuture[Assertion] =
-    (renderer, selector) =>
-      Unsafe.unsafe { implicit unsafe =>
-        runtime.unsafe.runToFuture(f(renderer, selector))
-      }
+  def debounce[A](task: => A): Task[A] = ZIO.attempt(task).delay(0.seconds)
+  def debounce: Task[Unit]             = ZIO.unit.delay(0.seconds)
 
-  type RendererUnsafe = Shape => Unit
-  type RendererZIO    = Shape => Task[Unit]
+  type Renderer = Shape => Task[RenderedElement]
 
   private def init = {
     val suiteRootList    = document.createElement("dl")
@@ -76,7 +46,7 @@ trait WebInterpreterSpec extends AsyncFunSuite {
   private def suiteClassSimpleName     = this.getClass.getSimpleName
   private def testId(testName: String) = s"$suiteClassName: $testName"
 
-  private def render(testName: String)(shape: Shape): Unit = {
+  private def render(testName: String)(shape: Shape)(implicit unsafe: Unsafe): Task[RenderedElement] = ZIO.attempt {
 
     val testTitle = document.createElement("dt")
     testTitle.textContent = testName
@@ -88,12 +58,12 @@ trait WebInterpreterSpec extends AsyncFunSuite {
     testRoot.setAttribute("style", """display: flex; border: solid; border-width: 10; border-color: lightgray""")
     document.getElementById(suiteClassName).appendChild(testRoot)
 
-    Unsafe.unsafe { implicit unsafe =>
-      renderLaminar(
-        testRoot,
-        new ShapeInterpreter().asLaminarElement(shape),
-      )
-    }
+    renderLaminar(
+      testRoot,
+      new ShapeInterpreter().asLaminarElement(shape),
+    )
+
+    RenderedElement.fromDomElement(document.getElementById(testId(testName)).firstElementChild)
 
   }
 

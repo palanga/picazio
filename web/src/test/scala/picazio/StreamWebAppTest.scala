@@ -7,7 +7,7 @@ import zio.stream.*
 
 class StreamWebAppTest extends WebInterpreterSpec with Matchers {
 
-  testRenderZIOSafe("a column can be dynamically built from a stream") { (render, select) =>
+  testShape("a column can be dynamically built from a stream") { render =>
 
     object ChatRoom {
       def init: Task[ChatRoom] = Hub.sliding[String](8).map(new ChatRoom(_))
@@ -23,19 +23,20 @@ class StreamWebAppTest extends WebInterpreterSpec with Matchers {
     val scope = ZLayer.succeed(Scope.global)
 
     (for {
-      chatRoom          <- ChatRoom.init
-      messageStream     <- chatRoom.subscribe
-      _                 <- render(drawChatMessages(messageStream))
-      noMessagesYetHtml <- select.renderedHtml
-      _                 <- chatRoom.publish("hola Nube")
-      htmlZero          <- select.renderedHtml
-      _                 <- chatRoom.publish("cita bebecita")
-      htmlOne           <- select.renderedHtml
-    } yield {
-      noMessagesYetHtml shouldBe """<div style="display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; width: 100%;"><!----></div>"""
-      htmlZero shouldBe """<div style="display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; width: 100%;"><!----><span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">hola Nube</span></div>"""
-      htmlOne shouldBe """<div style="display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; width: 100%;"><!----><span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">hola Nube</span><span style="font-family: system-ui; font-size: 16px; padding-top: 4px;">cita bebecita</span></div>"""
-    }).provide(scope)
+      chatRoom      <- ChatRoom.init
+      messageStream <- chatRoom.subscribe
+      root          <- render(drawChatMessages(messageStream))
+      _             <- debounce(root.tag shouldBe "div")
+      _             <- debounce(root shouldBe empty)
+      _             <- chatRoom.publish("hola Nube")
+      _             <- debounce(root should have size 1)
+      _             <- debounce(root.head.tag shouldBe "span")
+      _             <- debounce(root.head.text shouldBe "hola Nube")
+      _             <- chatRoom.publish("cita bebecita")
+      _             <- debounce(root should have size 2)
+      _             <- debounce(root.tail.head.tag shouldBe "span")
+      result        <- debounce(root.tail.head.text shouldBe "cita bebecita")
+    } yield result).provide(scope)
 
   }
 

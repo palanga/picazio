@@ -3,5 +3,5 @@ package picazio.test
 import zio.*
 
 trait SelectorZIO {
-  def renderedHtml: Task[String]
+  def root: Task[RenderedElement]
 }
