@@ -7,6 +7,7 @@ import org.scalajs.dom.Element
 import picazio.Shape.*
 import picazio.style.*
 import picazio.style.Style.*
+import picazio.theme.*
 import zio.*
 
 import scala.util.chaining.scalaUtilChainingOps
@@ -33,7 +34,7 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
   private[picazio] def applyStyles(shape: Shape)(element: ReactiveElement[Element]): ReactiveElement[Element] =
     defaultStylesForShape(shape)
       .pipe(applyTheme)
-      .pipe(convertToLaminarStyleSetters)
+      .pipe(convertToLaminarStyleSetters(shape))
       .pipe(applyTypography(shape))
       .pipe(amendStyles(element))
 
@@ -45,11 +46,11 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
       case _: SubscribedTextInput  => InputTextStyles.default
       case _: SignaledTextInput    => InputTextStyles.default
       case _: Shape.Button         => ButtonStyles.default
-      case _: StaticColumn         => StyleSheet.empty
-      case _: DynamicColumn        => StyleSheet.empty
-      case _: StreamColumn         => StyleSheet.empty
-      case _: StaticRow            => StyleSheet.empty
-      case _: DynamicRow           => StyleSheet.empty
+      case _: StaticColumn         => SequenceStyles.default
+      case _: DynamicColumn        => SequenceStyles.default
+      case _: StreamColumn         => SequenceStyles.default
+      case _: StaticRow            => SequenceStyles.default
+      case _: DynamicRow           => SequenceStyles.default
       case Styled(styles, inner)   => defaultStylesForShape(inner) ++ styles
       case OnClick(_, inner)       => defaultStylesForShape(inner) ++ OnClickStyles.default
       case OnInput(_, inner)       => defaultStylesForShape(inner)
@@ -57,38 +58,68 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
       case _                       => StyleSheet.empty
     }
 
-  private def applyTheme(styles: StyleSheet): ThemedStyles = ThemedStyles(styles, theme)
+  private def applyTheme(styles: StyleSheet): ThemedStyles = picazio.theme.ThemedStyles(styles, theme)
 
-  private def convertToLaminarStyleSetters(themedStyles: ThemedStyles): Seq[Modifier[Base]] = {
-    val ThemedStyles(styles, Theme(sizeMultiplier, _)) = themedStyles
-    styles.values.map {
-      case MarginTop(size) => marginTop := (size * sizeMultiplier).toString + "px"
+  private def convertToLaminarStyleSetters(shape: Shape)(themedStyles: ThemedStyles): Seq[Modifier[Base]] = {
+    val ThemedStyles(styles, Theme(sizeMultiplier, _, colorPalette)) = themedStyles
+    styles.values.flatMap {
+      case MarginTop(size)    => Seq(marginTop := (size * sizeMultiplier).toString + "px")
+      case MarginBottom(size) => Seq(marginBottom := (size * sizeMultiplier).toString + "px")
+      case MarginStart(size)  => Seq(marginLeft := (size * sizeMultiplier).toString + "px")
+      case MarginEnd(size)    => Seq(marginRight := (size * sizeMultiplier).toString + "px")
 
-      case PaddingTop(size)    => paddingTop    := (size * sizeMultiplier).toString + "px"
-      case PaddingBottom(size) => paddingBottom := (size * sizeMultiplier).toString + "px"
-      case PaddingStart(size)  => paddingLeft   := (size * sizeMultiplier).toString + "px"
-      case PaddingEnd(size)    => paddingRight  := (size * sizeMultiplier).toString + "px"
+      case PaddingTop(size)    => Seq(paddingTop := (size * sizeMultiplier).toString + "px")
+      case PaddingBottom(size) => Seq(paddingBottom := (size * sizeMultiplier).toString + "px")
+      case PaddingStart(size)  => Seq(paddingLeft := (size * sizeMultiplier).toString + "px")
+      case PaddingEnd(size)    => Seq(paddingRight := (size * sizeMultiplier).toString + "px")
 
-      case BorderTopWidth(size: Size)    => borderTopWidth    := (size * sizeMultiplier).toString + "px"
-      case BorderBottomWidth(size: Size) => borderBottomWidth := (size * sizeMultiplier).toString + "px"
-      case BorderStartWidth(size: Size)  => borderLeftWidth   := (size * sizeMultiplier).toString + "px"
-      case BorderEndWidth(size: Size)    => borderRightWidth  := (size * sizeMultiplier).toString + "px"
+      case SelfAlignment(alignment) => Seq(alignSelf := alignment.toString)
 
-      case BorderTopStyle(line: Line)    => borderTopStyle    := line.toString
-      case BorderBottomStyle(line: Line) => borderBottomStyle := line.toString
-      case BorderStartStyle(line: Line)  => borderLeftStyle   := line.toString
-      case BorderEndStyle(line: Line)    => borderRightStyle  := line.toString
+      case Width(percentage) => Seq(width.percent(percentage))
 
-      case BorderRadius(size) => borderRadius := (size * sizeMultiplier).toString + "px"
+      case JustifyContent(justification) => Seq(justifyContent := justification.toString)
 
-      case Cursor(cursorVariant) => cursor := cursorVariant.toString
+      case BorderTopWidth(size: Size)    => Seq(borderTopWidth := (size * sizeMultiplier).toString + "px")
+      case BorderBottomWidth(size: Size) => Seq(borderBottomWidth := (size * sizeMultiplier).toString + "px")
+      case BorderStartWidth(size: Size)  => Seq(borderLeftWidth := (size * sizeMultiplier).toString + "px")
+      case BorderEndWidth(size: Size)    => Seq(borderRightWidth := (size * sizeMultiplier).toString + "px")
 
-      case FontSize(size) => fontSize := (size * sizeMultiplier * 2).toString + "px"
+      case BorderTopStyle(line: Line)    => Seq(borderTopStyle := line.toString)
+      case BorderBottomStyle(line: Line) => Seq(borderBottomStyle := line.toString)
+      case BorderStartStyle(line: Line)  => Seq(borderLeftStyle := line.toString)
+      case BorderEndStyle(line: Line)    => Seq(borderRightStyle := line.toString)
 
-      case Outline(line) => outline := line.toString
+      case BorderRadius(size) => Seq(borderRadius := (size * sizeMultiplier).toString + "px")
+
+      case ColorStyle(color_) =>
+        shape match {
+          case Styled(_, Surface(_)) => Seq(backgroundColor := colorPalette.get(color_).toString)
+          case _                     => Seq(color := colorPalette.get(color_).toString)
+        }
+
+      case BackgroundColorStyle(color_) => Seq(backgroundColor := colorPalette.get(color_).toString)
+
+      case CursorStyle(cursor_) => Seq(cursor := cursor_.toString)
+
+      case FontSize(size) => Seq(fontSize := (size * sizeMultiplier * 2).toString + "px")
+
+      case Outline(line) => Seq(outline := line.toString)
+
+      case Overflowing(overflow_) =>
+        overflow_ match {
+          case Overflow.Hidden   => Seq(overflow.hidden)
+          case Overflow.Ellipsis => Seq(textOverflow.ellipsis, overflow.hidden, whiteSpace.nowrap)
+          case Overflow.Scroll   => Seq(overflow.scroll)
+        }
+
+      case Wrapping(wrap_) =>
+        wrap_ match {
+          case Wrap.NoWrap         => Seq(whiteSpace.nowrap)
+          case Wrap.WhiteSpaceWrap => Seq(whiteSpace.normal)
+        }
 
       case DynamicPaddingTop(size) =>
-        paddingTop <-- signal.toLaminarSignal(size.map(_ * sizeMultiplier).map(_.toString))
+        Seq(paddingTop <-- signal.toLaminarSignal(size.map(_ * sizeMultiplier).map(_.toString)))
     }
   }
 

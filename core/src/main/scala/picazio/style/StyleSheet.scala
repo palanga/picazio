@@ -1,12 +1,14 @@
 package picazio.style
 
-final class StyleSheet private (private val stylesByType: Map[Class[? <: Style], Style]) extends AnyVal {
+final private[picazio] class StyleSheet private (private val stylesByType: Map[Class[? <: Style], Style])
+    extends AnyVal {
 
   /**
    * Add a new Style to this StyleSheet. If this StyleSheet already contains a
    * Style definition of the same type the new value overrides the old one.
    */
-  private[picazio] def +(style: Style): StyleSheet = new StyleSheet(this.stylesByType + (style.getClass -> style))
+  private[picazio] def +(style: Style): StyleSheet =
+    new StyleSheet(this.stylesByType + (style.getClass.asInstanceOf[Class[Style]] -> style))
 
   /**
    * Return a new StyleSheet containing the styles from the left hand operand

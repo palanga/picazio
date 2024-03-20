@@ -5,7 +5,7 @@ import org.scalajs.dom.*
 import org.scalatest.Assertion
 import org.scalatest.funsuite.AsyncFunSuite
 import picazio.*
-import picazio.style.Theme
+import picazio.theme.Theme
 import zio.*
 
 import scala.concurrent.*

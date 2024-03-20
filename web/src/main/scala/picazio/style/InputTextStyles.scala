@@ -14,5 +14,6 @@ object InputTextStyles {
       Style.BorderTopWidth(Size.none),
       Style.BorderStartWidth(Size.none),
       Style.BorderEndWidth(Size.none),
+      Style.Width(100),
     )
 }

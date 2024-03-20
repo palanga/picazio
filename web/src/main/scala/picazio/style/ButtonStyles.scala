@@ -6,7 +6,7 @@ object ButtonStyles {
       Style.FontSize(Size.medium),
       Style.PaddingTop(Size.smallestPlus),
       Style.PaddingBottom(Size.smallestPlus),
-      Style.Cursor(CursorVariant.pointer),
+      Style.CursorStyle(Cursor.pointer),
       Style.BorderRadius(Size.mediumSmall),
       Style.BorderTopStyle(Line.none),
       Style.BorderBottomStyle(Line.none),

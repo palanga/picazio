@@ -59,10 +59,11 @@ lazy val core =
       name        := "picazio-core",
       description := "A web UI library made with ZIO and Laminar",
       libraryDependencies ++= Seq(
-        "dev.zio" %%% "zio"         % ZIO_VERSION,
-        "dev.zio" %%% "zio-streams" % ZIO_VERSION,
+        "dev.zio"       %%% "zio"         % ZIO_VERSION,
+        "dev.zio"       %%% "zio-streams" % ZIO_VERSION,
+        "org.scalatest" %%% "scalatest"   % SCALA_TEST_VERSION % Test,
       ),
-      Test / skip := true,
+      Test / skip := false,
       commonSettings,
     )
 
@@ -115,6 +116,22 @@ lazy val chat_example =
       libraryDependencies ++= Seq(
         "dev.zio" %% "zio-http" % ZIO_HTTP_VERSION
       ),
+    )
+    .dependsOn(
+      core,
+      web,
+    )
+
+lazy val wallet_example =
+  (project in file("wallet-example"))
+    .enablePlugins(ScalaJSPlugin)
+    .settings(
+      name                            := "wallet-example",
+      publish / skip                  := true,
+      Test / skip                     := true,
+      scalaJSUseMainModuleInitializer := true,
+      Compile / mainClass             := Some("examples.wallet.ui.Main"),
+      commonSettings,
     )
     .dependsOn(
       core,

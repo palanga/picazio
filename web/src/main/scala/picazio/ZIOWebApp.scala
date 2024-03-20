@@ -2,14 +2,16 @@ package picazio
 
 import com.raquo.laminar.api.L.*
 import org.scalajs.dom
-import picazio.style.Theme
+import picazio.theme.Theme
 import zio.*
 
 trait ZIOWebApp {
 
   def root: Task[Shape]
 
-  implicit val runtime: Runtime[Theme] = PicazioRuntime.default
+  def theme: Theme = Theme.default
+
+  implicit val runtime: Runtime[Theme] = PicazioRuntime.withTheme(theme)
 
   final def main(args0: Array[String]): Unit =
     Unsafe.unsafe { implicit unsafe =>

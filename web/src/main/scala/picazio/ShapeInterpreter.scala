@@ -6,9 +6,10 @@ import org.scalajs.dom.{ console, Element }
 import picazio.Shape.*
 import picazio.signal.toLaminarSignal
 import picazio.stream.toLaminarCommandStream
-import picazio.style.Theme
+import picazio.theme.Theme
 import zio.*
 
+import scala.annotation.tailrec
 import scala.util.chaining.scalaUtilChainingOps
 
 private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe: Unsafe) {
@@ -18,42 +19,46 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
   private[picazio] def asLaminarElement(shape: Shape): ReactiveElement[Element] =
     convertToLaminarReactiveElement(shape) pipe styleInterpreter.applyStyles(shape)
 
+  @tailrec
   private def convertToLaminarReactiveElement(shape: Shape): ReactiveElement[Element] = {
     shape match {
-      case StaticText(content) => span(content)
 
-      case Text(content) => span(child.text <-- toLaminarSignal(content))
+      case StaticText(content) => span(content)
+      case Text(content)       => span(child.text <-- toLaminarSignal(content))
 
       case TextInput(_placeholder) =>
         console.warn("Using a text input without an onInput handler has no sense.")
-        input(
-          placeholder := _placeholder,
-          width.percent(100),
-        )
+        input(placeholder := _placeholder)
 
       case SubscribedTextInput(_placeholder, ref) =>
         convertToLaminarReactiveElement(
           Shape.textInput(_placeholder, ref.signal).onInput(text => ref.set(text))
-        )
+        ) // TODO check if this should call asLaminarElement instead of convertToLaminarReactiveElement
 
       case SignaledTextInput(_placeholder, signal) =>
         console.warn("Using a text input without an onInput handler has no sense.")
         input(
           placeholder := _placeholder,
           value <-- toLaminarSignal(signal),
-          width.percent(100),
         )
 
-      case Button(content) => laminarButton(content)
+      case Button(content) =>
+        laminarButton(
+          content,
+          width := "fit-content",
+        )
+
+      case Reversed(inner) =>
+        val flexModifier = if (isColumn(inner)) flexDirection.columnReverse else flexDirection.rowReverse
+        amendHtmlOrEcho(asLaminarElement(inner))(flexModifier)
+
+      case Surface(inner) => div(asLaminarElement(inner), minHeight.vh(100))
 
       case StaticColumn(content) =>
         div(
           content.map(asLaminarElement),
           display.flex,
           flexDirection.column,
-          alignItems.flexStart,
-          justifyContent.flexStart,
-          width.percent(100),
         )
 
       case DynamicColumn(content) =>
@@ -61,9 +66,6 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           children <-- toLaminarSignal(content).map(_.map(asLaminarElement)),
           display.flex,
           flexDirection.column,
-          alignItems.flexStart,
-          justifyContent.flexStart,
-          width.percent(100),
         )
 
       case StreamColumn(content) =>
@@ -71,9 +73,6 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           children.command <-- toLaminarCommandStream(content, asLaminarElement, CollectionCommand.Append.apply),
           display.flex,
           flexDirection.column,
-          alignItems.flexStart,
-          justifyContent.flexStart,
-          width.percent(100),
         )
 
       case ZIOStreamColumn(content) =>
@@ -81,9 +80,6 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           children.command <-- toLaminarCommandStream(content, asLaminarElement, CollectionCommand.Append.apply),
           display.flex,
           flexDirection.column,
-          alignItems.flexStart,
-          justifyContent.flexStart,
-          width.percent(100),
         )
 
       case StaticRow(content) =>
@@ -91,9 +87,6 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           content.map(asLaminarElement),
           display.flex,
           flexDirection.row,
-          alignItems.flexStart,
-          justifyContent.flexStart,
-          width.percent(100),
         )
 
       case DynamicRow(content) =>
@@ -101,9 +94,6 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           children <-- toLaminarSignal(content).map(_.map(asLaminarElement)),
           display.flex,
           flexDirection.row,
-          alignItems.flexStart,
-          justifyContent.flexStart,
-          width.percent(100),
         )
 
       case OnClick(task, inner) =>
@@ -114,7 +104,6 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
         input(
           placeholder := _placeholder,
           onInput.mapToValue --> { current => runtime.unsafe.runToFuture(action(current)) },
-          width.percent(100),
         )
 
       case OnInput(action, SubscribedTextInput(_placeholder, ref)) =>
@@ -124,7 +113,6 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
             value <-- toLaminarSignal(ref.signal),
             onInput.mapToValue --> { current => runtime.unsafe.runToFuture(ref.set(current) <* action(current)) },
           ),
-          width.percent(100),
         )
 
       case OnInput(action, SignaledTextInput(_placeholder, signal)) =>
@@ -142,7 +130,6 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
             value <-- state,
             onInput.mapToValue --> { current => handleOnInput(current) },
           ),
-          width.percent(100),
         )
 
       case OnKeyPressed(action, inner) =>
@@ -164,7 +151,6 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
             value <-- state,
             onInput.mapToValue.filter(filter) --> { current => handleOnInput(current) },
           ),
-          width.percent(100),
         )
 
       case Focused(inner) => amendHtmlOrEcho(asLaminarElement(inner))(onMountFocus)
@@ -187,6 +173,24 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
     }
 
+  }
+
+  @tailrec
+  private def isColumn(inner: Shape): Boolean = inner match {
+    case StaticColumn(_)         => true
+    case DynamicColumn(_)        => true
+    case StreamColumn(_)         => true
+    case ZIOStreamColumn(_)      => true
+    case StaticRow(_)            => false
+    case DynamicRow(_)           => false
+    case OnClick(_, inner)       => isColumn(inner)
+    case OnInput(_, inner)       => isColumn(inner)
+    case OnKeyPressed(_, inner)  => isColumn(inner)
+    case OnInputFilter(_, inner) => isColumn(inner)
+    case Focused(inner)          => isColumn(inner)
+    case Styled(_, inner)        => isColumn(inner)
+    case Reversed(inner)         => isColumn(inner)
+    case _                       => println("Calling isColumn on a non column or row shape has no sense"); false
   }
 
   private def amendHtmlOrEcho(

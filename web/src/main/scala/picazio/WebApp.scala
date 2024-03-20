@@ -1,10 +1,13 @@
 package picazio
 
+import picazio.theme.Theme
 import zio.*
 
 trait WebApp { self =>
 
   def root: Shape
+
+  def theme: Theme = Theme.default
 
   final def main(args0: Array[String]): Unit = app.main(args0)
 

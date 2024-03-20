@@ -1,6 +1,7 @@
 package picazio
 
-import picazio.style.StyleSheet
+import picazio.style.{ Size, StyleSheet }
+import picazio.theme.Theme
 import zio.*
 import zio.stream.*
 
@@ -15,6 +16,7 @@ object Shape {
   def textInput(signal: Signal[String]): Shape                            = SignaledTextInput("", signal)
   def textInput(placeholder: String, signal: Signal[String]): Shape       = SignaledTextInput(placeholder, signal)
   def button(content: String): Shape                                      = Button(content)
+  def surface(inner: Shape)                                               = Surface(inner)
   def column(content: Shape*): Shape                                      = StaticColumn(content)
   def column(content: Signal[Seq[Shape]]): Shape                          = DynamicColumn(content)
   def column(content: Stream[Throwable, Shape]): Shape                    = StreamColumn(content)
@@ -28,6 +30,7 @@ object Shape {
   final private[picazio] case class SubscribedTextInput(placeholder: String, ref: SubscriptionRef[String]) extends Shape
   final private[picazio] case class SignaledTextInput(placeholder: String, signal: Signal[String])         extends Shape
   final private[picazio] case class Button(content: String)                                                extends Shape
+  final private[picazio] case class Surface(inner: Shape)                                                  extends Shape
   final private[picazio] case class StaticColumn(content: Seq[Shape])                                      extends Shape
   final private[picazio] case class DynamicColumn(content: Signal[Seq[Shape]])                             extends Shape
   final private[picazio] case class StreamColumn(content: Stream[Throwable, Shape])                        extends Shape
@@ -40,6 +43,7 @@ object Shape {
   final private[picazio] case class OnInputFilter(filter: String => Boolean, inner: Shape)                 extends Shape
   final private[picazio] case class Focused(inner: Shape)                                                  extends Shape
   final private[picazio] case class Styled(styles: StyleSheet, inner: Shape)                               extends Shape
+  final private[picazio] case class Reversed(inner: Shape)                                                 extends Shape
 
 }
 
@@ -69,5 +73,10 @@ sealed trait Shape {
    * Focus this shape on mount.
    */
   final def focused: Shape = Shape.Focused(this)
+
+  /**
+   * Reverse the order of the items on this column or row.
+   */
+  final def reverse: Shape = Shape.Reversed(this)
 
 }

@@ -62,7 +62,7 @@ class WebAppTest extends WebInterpreterSpec with Matchers {
     }
 
     for {
-      root <- render(Shape.text("botón").onClick(Counter.increment))
+      root <- render(Shape.button("botón").onClick(Counter.increment))
       _    <- root.click.repeatN(4)
 
     } yield {
