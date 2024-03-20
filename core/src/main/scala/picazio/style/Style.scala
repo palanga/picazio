@@ -6,14 +6,19 @@ sealed trait Style
 
 object Style {
 
-  case class MarginTop(size: Size) extends Style
+  case class MarginTop(size: Size)    extends Style
+  case class MarginBottom(size: Size) extends Style
+  case class MarginStart(size: Size)  extends Style
+  case class MarginEnd(size: Size)    extends Style
 
   case class PaddingTop(size: Size)    extends Style
   case class PaddingBottom(size: Size) extends Style
   case class PaddingStart(size: Size)  extends Style
   case class PaddingEnd(size: Size)    extends Style
 
-  case class Cursor(cursor: CursorVariant) extends Style
+  case class SelfAlignment(alignment: Alignment) extends Style
+
+  case class CursorStyle(cursor: Cursor) extends Style
 
   case class FontSize(size: Size) extends Style
 
@@ -28,6 +33,9 @@ object Style {
   case class BorderEndStyle(line: Line)    extends Style
 
   case class BorderRadius(size: Size) extends Style
+
+  case class ColorStyle(color: Color)           extends Style
+  case class BackgroundColorStyle(color: Color) extends Style
 
   case class DynamicPaddingTop(size: Signal[Size]) extends Style
 

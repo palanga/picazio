@@ -33,7 +33,7 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
   private[picazio] def applyStyles(shape: Shape)(element: ReactiveElement[Element]): ReactiveElement[Element] =
     defaultStylesForShape(shape)
       .pipe(applyTheme)
-      .pipe(convertToLaminarStyleSetters)
+      .pipe(convertToLaminarStyleSetters(shape))
       .pipe(applyTypography(shape))
       .pipe(amendStyles(element))
 
@@ -59,15 +59,20 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
 
   private def applyTheme(styles: StyleSheet): ThemedStyles = ThemedStyles(styles, theme)
 
-  private def convertToLaminarStyleSetters(themedStyles: ThemedStyles): Seq[Modifier[Base]] = {
-    val ThemedStyles(styles, Theme(sizeMultiplier, _)) = themedStyles
+  private def convertToLaminarStyleSetters(shape: Shape)(themedStyles: ThemedStyles): Seq[Modifier[Base]] = {
+    val ThemedStyles(styles, Theme(sizeMultiplier, _, colorPalette)) = themedStyles
     styles.values.map {
-      case MarginTop(size) => marginTop := (size * sizeMultiplier).toString + "px"
+      case MarginTop(size)    => marginTop    := (size * sizeMultiplier).toString + "px"
+      case MarginBottom(size) => marginBottom := (size * sizeMultiplier).toString + "px"
+      case MarginStart(size)  => marginLeft   := (size * sizeMultiplier).toString + "px"
+      case MarginEnd(size)    => marginRight  := (size * sizeMultiplier).toString + "px"
 
       case PaddingTop(size)    => paddingTop    := (size * sizeMultiplier).toString + "px"
       case PaddingBottom(size) => paddingBottom := (size * sizeMultiplier).toString + "px"
       case PaddingStart(size)  => paddingLeft   := (size * sizeMultiplier).toString + "px"
       case PaddingEnd(size)    => paddingRight  := (size * sizeMultiplier).toString + "px"
+
+      case SelfAlignment(alignment) => alignSelf := alignment.toString
 
       case BorderTopWidth(size: Size)    => borderTopWidth    := (size * sizeMultiplier).toString + "px"
       case BorderBottomWidth(size: Size) => borderBottomWidth := (size * sizeMultiplier).toString + "px"
@@ -81,7 +86,15 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
 
       case BorderRadius(size) => borderRadius := (size * sizeMultiplier).toString + "px"
 
-      case Cursor(cursorVariant) => cursor := cursorVariant.toString
+      case ColorStyle(color_) =>
+        shape match {
+          case Styled(_, Surface(_)) => backgroundColor := colorPalette.get(color_).toString
+          case _                     => color           := colorPalette.get(color_).toString
+        }
+
+      case BackgroundColorStyle(color_) => backgroundColor := colorPalette.get(color_).toString
+
+      case CursorStyle(cursor_) => cursor := cursor_.toString
 
       case FontSize(size) => fontSize := (size * sizeMultiplier * 2).toString + "px"
 

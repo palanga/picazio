@@ -12,7 +12,7 @@ class CustomStylesTest extends WebInterpreterSpec with Matchers {
       Shape
         .text("hola")
         .paddingTop(Size.large)
-        .cursor(CursorVariant.pointer)
+        .cursor(Cursor.pointer)
     )
       .map(_.styles should contain allElementsOf RenderedStyleSet("padding-top" -> "16px", "cursor" -> "pointer"))
 

@@ -75,6 +75,7 @@ class TextDefaultStylesTest extends WebInterpreterSpec with Matchers {
   }
 
   private val textDefaultStyles = RenderedStyleSet(
+    "width"       -> "fit-content",
     "font-family" -> "system-ui",
     "font-size"   -> "16px",
     "padding-top" -> "4px",
@@ -91,13 +92,14 @@ class TextDefaultStylesTest extends WebInterpreterSpec with Matchers {
   )
 
   private val buttonDefaultStyles = RenderedStyleSet(
+    "width"          -> "fit-content",
+    "cursor"         -> "pointer",
     "font-family"    -> "system-ui",
     "padding-bottom" -> "2px",
     "border-style"   -> "none",
     "padding-top"    -> "2px",
     "font-size"      -> "16px",
     "border-radius"  -> "6px",
-    "cursor"         -> "pointer",
   )
 
 }

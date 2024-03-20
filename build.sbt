@@ -121,6 +121,22 @@ lazy val chat_example =
       web,
     )
 
+lazy val wallet_example =
+  (project in file("wallet-example"))
+    .enablePlugins(ScalaJSPlugin)
+    .settings(
+      name                            := "wallet-example",
+      publish / skip                  := true,
+      Test / skip                     := true,
+      scalaJSUseMainModuleInitializer := true,
+      Compile / mainClass             := Some("examples.wallet.ui.Main"),
+      commonSettings,
+    )
+    .dependsOn(
+      core,
+      web,
+    )
+
 val commonSettings = Def.settings(
   scalacOptions ++= commonOptions ++ versionSpecificOptions(scalaVersion.value)
 )
