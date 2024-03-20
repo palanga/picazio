@@ -9,7 +9,7 @@ object Main extends ZIOWebApp {
 
   private val scope = ZLayer.succeed(Scope.global)
 
-  override def root =
+  override def root: Task[Shape] =
     (for {
       chatRoom       <- ZIO.service[ChatRoom]
       currentMessage <- SubscriptionRef.make("")

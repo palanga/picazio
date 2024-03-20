@@ -8,7 +8,7 @@ import java.net.InetAddress
 
 object Main extends ZIOAppDefault {
 
-  override def run =
+  override def run: Task[Unit] =
     app.provide(
       Server.default,
       InMemoryChatRoom.buildLayer,
