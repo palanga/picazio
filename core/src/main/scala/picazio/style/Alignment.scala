@@ -1,6 +1,6 @@
 package picazio.style
 
-final class Alignment private (val self: String) extends AnyVal {
+final class Alignment private (private[picazio] val self: String) extends AnyVal {
   override def toString: String = self
 }
 

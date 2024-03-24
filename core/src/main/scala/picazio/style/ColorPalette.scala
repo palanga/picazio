@@ -2,23 +2,23 @@ package picazio.style
 
 import picazio.internal.Pigment
 
-case class ColorPalette(
-  primary: Pigment,
-  secondary: Pigment,
+final class ColorPalette private[picazio] (
+  private[picazio] val primary: Pigment,
+  private[picazio] val secondary: Pigment,
 ) {
 
   def get(color: Color): Pigment = {
 
-    val baseColor = color.paletteColor match {
-      case PaletteColor.Custom(hexString) => Pigment.fromHexStringUnsafe(hexString)
-      case PaletteColor.Primary           => primary
-      case PaletteColor.Secondary         => secondary
+    val baseColor = color.colorPick match {
+      case ColorPick.Custom(hexString) => Pigment.fromHexStringUnsafe(hexString)
+      case ColorPick.Primary           => primary
+      case ColorPick.Secondary         => secondary
     }
 
     val finalColor = color.shade match {
-      case Shade.Brightest => baseColor.lighter.lighter.lighter
-      case Shade.Brighter  => baseColor.lighter.lighter
-      case Shade.Bright    => baseColor.lighter
+      case Shade.Lightest => baseColor.lighter.lighter.lighter
+      case Shade.Lighter  => baseColor.lighter.lighter
+      case Shade.Light    => baseColor.lighter
       case Shade.Medium    => baseColor
       case Shade.Dark      => baseColor.darker
       case Shade.Darker    => baseColor.darker.darker
@@ -34,7 +34,7 @@ case class ColorPalette(
 object ColorPalette {
 
   def default: ColorPalette =
-    ColorPalette(
+    new ColorPalette(
       Pigment.fromHexStringUnsafe("B57EDC"),
       Pigment.fromHexStringUnsafe("FADFAD"),
     )
