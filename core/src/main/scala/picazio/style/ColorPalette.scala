@@ -8,7 +8,7 @@ case class ColorPalette(
   def get(color: Color): Pigment = {
 
     val baseColor = color.paletteColor match {
-      case PaletteColor.Custom(hexString) => Pigment.decode(hexString)
+      case PaletteColor.Custom(hexString) => Pigment.fromHexStringUnsafe(hexString)
       case PaletteColor.Primary           => primary
       case PaletteColor.Secondary         => secondary
     }
@@ -33,8 +33,8 @@ object ColorPalette {
 
   def default: ColorPalette =
     ColorPalette(
-      Pigment.decode("B57EDC"),
-      Pigment.decode("FADFAD"),
+      Pigment.fromHexStringUnsafe("B57EDC"),
+      Pigment.fromHexStringUnsafe("FADFAD"),
     )
 
 }
