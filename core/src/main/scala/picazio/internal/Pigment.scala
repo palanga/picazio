@@ -16,8 +16,8 @@ private[picazio] object Pigment {
   }
 
   final case class HSL(hue: Int, saturation: Int, lightness: Int) extends Pigment {
-    override def lighter: Pigment = this.copy(lightness = this.lightness + 10)
-    override def darker: Pigment  = this.copy(lightness = this.lightness - 10)
+    override def lighter: Pigment = this.copy(lightness = min(this.lightness + 10, 100))
+    override def darker: Pigment  = this.copy(lightness = max(this.lightness - 10, 0))
     override def toString: String = s"""hsl($hue, $saturation%, $lightness%)"""
   }
 
@@ -43,19 +43,19 @@ private[picazio] object Pigment {
   def rgbToHsl(rgb: RGB): HSL = {
     val RGB(red, green, blue) = rgb
 
-    val maximum = max(red, max(green, blue)) // 220
-    val minimum = min(red, min(green, blue)) // 126
-    val chroma  = maximum - minimum          // 220 - 126 = 94
+    val maximum = max(red, max(green, blue))
+    val minimum = min(red, min(green, blue))
+    val chroma  = maximum - minimum
 
     val hue1: Double =
       if (chroma == 0) 0
       else if (maximum == red) ((green - blue).toDouble / chroma) % 6
       else if (maximum == green) ((blue - red).toDouble / chroma) + 2
-      else ((red - green).toDouble / chroma) + 4 // 4.585
+      else ((red - green).toDouble / chroma) + 4
 
-    val hue: Int = ((60f * hue1) % 360).toInt // 275
+    val hue: Int = ((60f * hue1) % 360).round.toInt
 
-    val lightness: Double = (maximum + minimum).toDouble / 2.0 / 255.0 // 173
+    val lightness: Double = (maximum + minimum).toDouble / 2.0 / 255.0
 
     val saturation: Double =
       if (lightness == 1 || lightness == 0) 0
@@ -63,18 +63,5 @@ private[picazio] object Pigment {
 
     HSL(hue, (saturation * 100).round.toInt, (lightness * 100).round.toInt)
   }
-
-}
-
-object test extends App {
-  val base    = Pigment.fromHexStringUnsafe("B57EDC")
-  val hsl     = Pigment.rgbToHsl(base.asInstanceOf[Pigment.RGB])
-  val lighter = base.lighter
-  val darker  = base.darker
-
-  println(base)
-  println(hsl)
-  println(lighter)
-  println(darker)
 
 }

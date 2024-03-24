@@ -59,10 +59,11 @@ lazy val core =
       name        := "picazio-core",
       description := "A web UI library made with ZIO and Laminar",
       libraryDependencies ++= Seq(
-        "dev.zio" %%% "zio"         % ZIO_VERSION,
-        "dev.zio" %%% "zio-streams" % ZIO_VERSION,
+        "dev.zio"       %%% "zio"         % ZIO_VERSION,
+        "dev.zio"       %%% "zio-streams" % ZIO_VERSION,
+        "org.scalatest" %%% "scalatest"   % SCALA_TEST_VERSION % Test,
       ),
-      Test / skip := true,
+      Test / skip := false,
       commonSettings,
     )
 
