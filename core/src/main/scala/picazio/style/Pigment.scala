@@ -2,7 +2,7 @@ package picazio.style
 
 import java.lang.Math.*
 
-final private[picazio] class Pigment(red: Int, green: Int, blue: Int) {
+final private[picazio] case class Pigment private (red: Int, green: Int, blue: Int) {
 
   def brighter: Pigment = new Pigment(min(red + 32, 255), min(green + 32, 255), min(blue + 32, 255))
   def darker: Pigment   = new Pigment(max(red - 32, 0), max(green - 32, 0), max(blue - 32, 0))
@@ -32,4 +32,31 @@ private[picazio] object Pigment {
 
   }
 
+  private def rgbToHue(pigment: Pigment): HSL = {
+    val Pigment(red, green, blue) = pigment
+
+    val maximum = max(red, max(green, blue))
+    val minimum = min(red, min(green, blue))
+    val chroma  = maximum - minimum
+
+    val hue1: Int =
+      if (chroma == 0) 0
+      else if (maximum == red) ((green - blue) / chroma) % 6
+      else if (maximum == green) ((blue - red) / chroma) + 2
+      else ((red - green) / chroma) + 4
+
+    val hue: Int = (60 * hue1) % 360
+
+    val lightness = (maximum + minimum) / 2
+
+    val saturation =
+      if (lightness == 1 || lightness == 0) 0
+      else chroma / (1 - abs(2 * lightness - 1))
+
+    HSL(hue, saturation, lightness)
+  }
+
 }
+
+final private[picazio] case class HSL private (hue: Int, saturation: Int, lightness: Int)
+final private[picazio] case class RGB private (red: Int, green: Int, blue: Int)
