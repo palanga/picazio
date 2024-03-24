@@ -2,16 +2,24 @@ package picazio.style
 
 import java.lang.Math.*
 
-final private[picazio] case class Pigment private (red: Int, green: Int, blue: Int) {
-
-  def brighter: Pigment = new Pigment(min(red + 32, 255), min(green + 32, 255), min(blue + 32, 255))
-  def darker: Pigment   = new Pigment(max(red - 32, 0), max(green - 32, 0), max(blue - 32, 0))
-
-  override def toString: String = s"""rgb($red, $green, $blue)"""
-
+sealed private[picazio] trait Pigment {
+  def lighter: Pigment
+  def darker: Pigment
 }
 
 private[picazio] object Pigment {
+
+  final case class RGB(red: Int, green: Int, blue: Int) extends Pigment {
+    override def lighter: Pigment = rgbToHsl(this).lighter
+    override def darker: Pigment  = rgbToHsl(this).darker
+    override def toString: String = s"""rgb($red, $green, $blue)"""
+  }
+
+  final case class HSL(hue: Int, saturation: Int, lightness: Int) extends Pigment {
+    override def lighter: Pigment = this.copy(lightness = this.lightness + 10)
+    override def darker: Pigment  = this.copy(lightness = this.lightness - 10)
+    override def toString: String = s"""hsl($hue, $saturation%, $lightness%)"""
+  }
 
   def fromHexStringUnsafe(input: String): Pigment = {
 
@@ -26,14 +34,14 @@ private[picazio] object Pigment {
     if (strippedInput.length != 6) throw exception
     if (!hasOnlyValidChars) throw exception
     strippedInput.sliding(2, 2).map(Integer.parseInt(_, 16)).toList match {
-      case red :: green :: blue :: Nil => new Pigment(red, green, blue)
+      case red :: green :: blue :: Nil => RGB(red, green, blue)
       case _                           => throw exception
     }
 
   }
 
-  private def rgbToHue(pigment: Pigment): HSL = {
-    val Pigment(red, green, blue) = pigment
+  private def rgbToHsl(rgb: RGB): HSL = {
+    val RGB(red, green, blue) = rgb
 
     val maximum = max(red, max(green, blue))
     val minimum = min(red, min(green, blue))
@@ -57,6 +65,3 @@ private[picazio] object Pigment {
   }
 
 }
-
-final private[picazio] case class HSL private (hue: Int, saturation: Int, lightness: Int)
-final private[picazio] case class RGB private (red: Int, green: Int, blue: Int)

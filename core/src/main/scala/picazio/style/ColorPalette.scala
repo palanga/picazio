@@ -14,9 +14,9 @@ case class ColorPalette(
     }
 
     val finalColor = color.shade match {
-      case Shade.Brightest => baseColor.brighter.brighter.brighter
-      case Shade.Brighter  => baseColor.brighter.brighter
-      case Shade.Bright    => baseColor.brighter
+      case Shade.Brightest => baseColor.lighter.lighter.lighter
+      case Shade.Brighter  => baseColor.lighter.lighter
+      case Shade.Bright    => baseColor.lighter
       case Shade.Medium    => baseColor
       case Shade.Dark      => baseColor.darker
       case Shade.Darker    => baseColor.darker.darker
