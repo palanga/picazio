@@ -1,5 +1,7 @@
 package picazio.style
 
+import picazio.internal.Pigment
+
 case class ColorPalette(
   primary: Pigment,
   secondary: Pigment,

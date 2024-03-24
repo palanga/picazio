@@ -1,4 +1,4 @@
-package picazio.style
+package picazio.internal
 
 import java.lang.Math.*
 
