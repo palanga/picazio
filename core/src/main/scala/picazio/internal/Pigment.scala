@@ -40,28 +40,41 @@ private[picazio] object Pigment {
 
   }
 
-  private def rgbToHsl(rgb: RGB): HSL = {
+  def rgbToHsl(rgb: RGB): HSL = {
     val RGB(red, green, blue) = rgb
 
-    val maximum = max(red, max(green, blue))
-    val minimum = min(red, min(green, blue))
-    val chroma  = maximum - minimum
+    val maximum = max(red, max(green, blue)) // 220
+    val minimum = min(red, min(green, blue)) // 126
+    val chroma  = maximum - minimum          // 220 - 126 = 94
 
-    val hue1: Int =
+    val hue1: Double =
       if (chroma == 0) 0
-      else if (maximum == red) ((green - blue) / chroma) % 6
-      else if (maximum == green) ((blue - red) / chroma) + 2
-      else ((red - green) / chroma) + 4
+      else if (maximum == red) ((green - blue).toDouble / chroma) % 6
+      else if (maximum == green) ((blue - red).toDouble / chroma) + 2
+      else ((red - green).toDouble / chroma) + 4 // 4.585
 
-    val hue: Int = (60 * hue1) % 360
+    val hue: Int = ((60f * hue1) % 360).toInt // 275
 
-    val lightness = (maximum + minimum) / 2
+    val lightness: Double = (maximum + minimum).toDouble / 2.0 / 255.0 // 173
 
-    val saturation =
+    val saturation: Double =
       if (lightness == 1 || lightness == 0) 0
-      else chroma / (1 - abs(2 * lightness - 1))
+      else chroma / (1 - abs(2 * lightness - 1)) / 256.0 //
 
-    HSL(hue, saturation, lightness)
+    HSL(hue, (saturation * 100).round.toInt, (lightness * 100).round.toInt)
   }
+
+}
+
+object test extends App {
+  val base    = Pigment.fromHexStringUnsafe("B57EDC")
+  val hsl     = Pigment.rgbToHsl(base.asInstanceOf[Pigment.RGB])
+  val lighter = base.lighter
+  val darker  = base.darker
+
+  println(base)
+  println(hsl)
+  println(lighter)
+  println(darker)
 
 }
