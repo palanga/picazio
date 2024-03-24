@@ -2,7 +2,7 @@ package picazio.style
 
 import java.lang.Math.*
 
-final class Pigment(red: Int, green: Int, blue: Int) {
+final private[picazio] class Pigment(red: Int, green: Int, blue: Int) {
 
   def brighter: Pigment = new Pigment(min(red + 32, 255), min(green + 32, 255), min(blue + 32, 255))
   def darker: Pigment   = new Pigment(max(red - 32, 0), max(green - 32, 0), max(blue - 32, 0))
@@ -11,9 +11,10 @@ final class Pigment(red: Int, green: Int, blue: Int) {
 
 }
 
-object Pigment {
+private[picazio] object Pigment {
 
   def fromHexStringUnsafe(input: String): Pigment = {
+
     val strippedInput =
       if (input.startsWith("#")) input.substring(1)
       else if (input.startsWith("0x")) input.substring(2)
@@ -28,6 +29,7 @@ object Pigment {
       case red :: green :: blue :: Nil => new Pigment(red, green, blue)
       case _                           => throw exception
     }
+
   }
 
 }
