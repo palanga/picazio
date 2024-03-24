@@ -1,5 +1,7 @@
 package picazio
 
+import picazio.syntax.StyleOps
+
 import scala.language.implicitConversions
 
 trait StyleModule {

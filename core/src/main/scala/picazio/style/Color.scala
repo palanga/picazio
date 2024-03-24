@@ -11,9 +11,7 @@ case class Color(paletteColor: PaletteColor, shade: Shade = Shade.Medium) {
 }
 
 object Color {
-
   def custom(hexString: String): Color = Color(PaletteColor.Custom(hexString))
   def primary: Color                   = Color(PaletteColor.Primary)
   def secondary: Color                 = Color(PaletteColor.Secondary)
-
 }

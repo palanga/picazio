@@ -1,6 +1,7 @@
-package picazio
+package picazio.syntax
 
 import picazio.style.*
+import picazio.{Shape, Signal}
 
 final class StyleOps(val self: Shape) extends AnyVal {
 

@@ -1,6 +1,6 @@
 package picazio
 
-import picazio.StyleOps
+import picazio.syntax.StyleOps
 
 import scala.language.implicitConversions
 
