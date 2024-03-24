@@ -37,12 +37,18 @@ class PigmentTest extends AnyFunSuiteLike with Matchers {
   }
 
   test("pigment from hex string lower case with no 0x or # beginning") {
+
     Pigment.fromHexStringUnsafe("00b74f") match {
       case rgb: Pigment.RGB =>
         rgb shouldBe verdeRgb
         Pigment.rgbToHsl(rgb) shouldBe verdeHsl
       case _                => ??? // shouldn't happen
     }
+  }
+
+  test("pigment from invalid hex string throws") {
+    assertThrows[IllegalArgumentException](Pigment.fromHexStringUnsafe("00b74t"))
+    assertThrows[IllegalArgumentException](Pigment.fromHexStringUnsafe("00b74"))
   }
 
   test("lighter should increase lightness by 10%") {
