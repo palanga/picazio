@@ -36,8 +36,8 @@ jobs:
           distribution: zulu
           java-version: 11
           cache: sbt
-      - name: Setup chrome driver, cross compile, link JS and test
+      - name: Setup chrome driver, cross compile, link JS examples and test
         run: |
           export DISPLAY=:99
           sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 &
-          sbt crosstestcompile +web/test
+          sbt crosstestcompile +fastLinkJS +web/test
