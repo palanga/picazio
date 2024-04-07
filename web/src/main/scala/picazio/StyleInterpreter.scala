@@ -40,23 +40,21 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
 
   private def defaultStylesForShape(shape: Shape): StyleSheet =
     shape match {
-      case _: Text                 => TextStyles.default
-      case _: StaticText           => TextStyles.default
-      case _: TextInput            => InputTextStyles.default
-      case _: SubscribedTextInput  => InputTextStyles.default
-      case _: SignaledTextInput    => InputTextStyles.default
-      case _: Shape.Button         => ButtonStyles.default
-      case _: StaticColumn         => SequenceStyles.default
-      case _: DynamicColumn        => SequenceStyles.default
-      case _: StreamColumn         => SequenceStyles.default
-      case _: StaticRow            => SequenceStyles.default
-      case _: DynamicRow           => SequenceStyles.default
-      case _: Background           => BackgroundStyles.default
-      case Styled(styles, inner)   => defaultStylesForShape(inner) ++ styles
-      case OnClick(_, inner)       => defaultStylesForShape(inner) ++ OnClickStyles.default
-      case OnInput(_, inner)       => defaultStylesForShape(inner)
-      case OnInputFilter(_, inner) => defaultStylesForShape(inner)
-      case _                       => StyleSheet.empty
+      case _: Text                => TextStyles.default
+      case _: StaticText          => TextStyles.default
+      case _: TextInput           => InputTextStyles.default
+      case _: SubscribedTextInput => InputTextStyles.default
+      case _: SignaledTextInput   => InputTextStyles.default
+      case _: Shape.Button        => ButtonStyles.default
+      case _: StaticColumn        => SequenceStyles.default
+      case _: DynamicColumn       => SequenceStyles.default
+      case _: StreamColumn        => SequenceStyles.default
+      case _: StaticRow           => SequenceStyles.default
+      case _: DynamicRow          => SequenceStyles.default
+      case _: Background          => BackgroundStyles.default
+      case _: OnClick             => OnClickStyles.default
+      case Styled(styles, _)      => styles
+      case _                      => StyleSheet.empty
     }
 
   private def applyTheme(styles: StyleSheet): ThemedStyles = picazio.theme.ThemedStyles(styles, theme)
@@ -95,7 +93,7 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
       case ColorStyle(color_) =>
         shape match {
           case Styled(_, Background(_)) => Seq(backgroundColor := colorPalette.get(color_).toString)
-          case _                     => Seq(color := colorPalette.get(color_).toString)
+          case _                        => Seq(color := colorPalette.get(color_).toString)
         }
 
       case BackgroundColorStyle(color_) => Seq(backgroundColor := colorPalette.get(color_).toString)
