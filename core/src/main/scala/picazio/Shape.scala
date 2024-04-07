@@ -1,7 +1,6 @@
 package picazio
 
-import picazio.style.{ Size, StyleSheet }
-import picazio.theme.Theme
+import picazio.style.StyleSheet
 import zio.*
 import zio.stream.*
 
@@ -16,7 +15,7 @@ object Shape {
   def textInput(signal: Signal[String]): Shape                            = SignaledTextInput("", signal)
   def textInput(placeholder: String, signal: Signal[String]): Shape       = SignaledTextInput(placeholder, signal)
   def button(content: String): Shape                                      = Button(content)
-  def surface(inner: Shape)                                               = Surface(inner)
+  def background(content: Shape): Shape                                   = Background(content)
   def column(content: Shape*): Shape                                      = StaticColumn(content)
   def column(content: Signal[Seq[Shape]]): Shape                          = DynamicColumn(content)
   def column(content: Stream[Throwable, Shape]): Shape                    = StreamColumn(content)
@@ -30,7 +29,7 @@ object Shape {
   final private[picazio] case class SubscribedTextInput(placeholder: String, ref: SubscriptionRef[String]) extends Shape
   final private[picazio] case class SignaledTextInput(placeholder: String, signal: Signal[String])         extends Shape
   final private[picazio] case class Button(content: String)                                                extends Shape
-  final private[picazio] case class Surface(inner: Shape)                                                  extends Shape
+  final private[picazio] case class Background(inner: Shape)                                               extends Shape
   final private[picazio] case class StaticColumn(content: Seq[Shape])                                      extends Shape
   final private[picazio] case class DynamicColumn(content: Signal[Seq[Shape]])                             extends Shape
   final private[picazio] case class StreamColumn(content: Stream[Throwable, Shape])                        extends Shape

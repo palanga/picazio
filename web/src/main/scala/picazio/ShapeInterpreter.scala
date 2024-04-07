@@ -48,11 +48,11 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           width := "fit-content",
         )
 
+      case Background(inner) => div(asLaminarElement(inner), minHeight.vh(100))
+
       case Reversed(inner) =>
         val flexModifier = if (isColumn(inner)) flexDirection.columnReverse else flexDirection.rowReverse
         amendHtmlOrEcho(asLaminarElement(inner))(flexModifier)
-
-      case Surface(inner) => div(asLaminarElement(inner), minHeight.vh(100))
 
       case StaticColumn(content) =>
         div(

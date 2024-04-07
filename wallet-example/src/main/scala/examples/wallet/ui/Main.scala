@@ -23,12 +23,12 @@ object Main extends ZIOWebApp {
       .provide(FakeAccount.layer)
 
   private def Root(account: Account) =
-    Shape.surface(
+    Shape.background(
       Shape.column(
         Balance(account.balance),
         Transactions(account.transactions),
       )
-    ).color(Color.background)
+    )
 
   private def Balance(balance: Signal[Float]) =
     Shape.column(

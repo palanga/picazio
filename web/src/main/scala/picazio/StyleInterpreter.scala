@@ -51,6 +51,7 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
       case _: StreamColumn         => SequenceStyles.default
       case _: StaticRow            => SequenceStyles.default
       case _: DynamicRow           => SequenceStyles.default
+      case _: Background           => BackgroundStyles.default
       case Styled(styles, inner)   => defaultStylesForShape(inner) ++ styles
       case OnClick(_, inner)       => defaultStylesForShape(inner) ++ OnClickStyles.default
       case OnInput(_, inner)       => defaultStylesForShape(inner)
@@ -93,7 +94,7 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
 
       case ColorStyle(color_) =>
         shape match {
-          case Styled(_, Surface(_)) => Seq(backgroundColor := colorPalette.get(color_).toString)
+          case Styled(_, Background(_)) => Seq(backgroundColor := colorPalette.get(color_).toString)
           case _                     => Seq(color := colorPalette.get(color_).toString)
         }
 
