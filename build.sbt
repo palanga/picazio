@@ -49,7 +49,9 @@ lazy val root =
       core,
       web,
       examples,
-      chat_example,
+      chat_example_common,
+      chat_example_server,
+      chat_example_ui,
     )
 
 lazy val core =
@@ -103,21 +105,51 @@ lazy val examples =
       web,
     )
 
-lazy val chat_example =
-  (project in file("chat-example"))
+lazy val chat_example_common =
+  (project in file("chat-example-common"))
     .enablePlugins(ScalaJSPlugin)
     .settings(
-      name                            := "chat-example",
-      publish / skip                  := true,
-      Test / skip                     := true,
-      scalaJSUseMainModuleInitializer := true,
-      Compile / mainClass             := Some("examples.chat.ui.Main"),
+      name           := "chat-example-common",
+      description    := "Common chat example things for both frontend and backend",
+      publish / skip := true,
+      Test / skip    := true,
+      commonSettings,
+      libraryDependencies ++= Seq(
+        "dev.zio" %% "zio"         % ZIO_VERSION,
+        "dev.zio" %% "zio-streams" % ZIO_VERSION,
+      ),
+    )
+
+lazy val chat_example_server =
+  (project in file("chat-example-server"))
+    .settings(
+      name           := "chat-example-server",
+      description    := "Backend only chat example things",
+      publish / skip := true,
+      Test / skip    := true,
       commonSettings,
       libraryDependencies ++= Seq(
         "dev.zio" %% "zio-http" % ZIO_HTTP_VERSION
       ),
     )
     .dependsOn(
+      chat_example_common
+    )
+
+lazy val chat_example_ui =
+  (project in file("chat-example-ui"))
+    .enablePlugins(ScalaJSPlugin)
+    .settings(
+      name                            := "chat-example-ui",
+      description                     := "Frontend only chat example things",
+      publish / skip                  := true,
+      Test / skip                     := true,
+      scalaJSUseMainModuleInitializer := true,
+      Compile / mainClass             := Some("examples.chat.ui.Main"),
+      commonSettings,
+    )
+    .dependsOn(
+      chat_example_common,
       core,
       web,
     )
