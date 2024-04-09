@@ -89,6 +89,19 @@ lazy val web =
 def seleniumJSEnv(keepTestBrowserAlive: Boolean) =
   new SeleniumJSEnv(new ChromeOptions(), SeleniumJSEnv.Config().withKeepAlive(keepTestBrowserAlive))
 
+lazy val web_dev_server =
+  (project in file("web-dev-server"))
+    .settings(
+      name                     := "picazio-web-dev-server",
+      description              := "Development server for PicaZIO web",
+      Test / skip              := true,
+      libraryDependencies ++= Seq(
+        "dev.zio" %% "zio-http" % ZIO_HTTP_VERSION
+      ),
+      Test / parallelExecution := false,
+      commonSettings,
+    )
+
 lazy val examples =
   (project in file("examples"))
     .enablePlugins(ScalaJSPlugin)

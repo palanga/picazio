@@ -14,8 +14,8 @@ object Main extends ZIOWebApp {
       chatRoom       <- ZIO.service[ChatRoom]
       currentMessage <- SubscriptionRef.make("")
     } yield drawChatRoom(chatRoom, currentMessage))
-//      .provide(InMemoryChatRoom.buildLayer) // backendless version, runs the chat server in the browser
-      .provide(ChatRoomWebSocketClient.buildLayer("localhost", 8080)) // needs chat server running
+      .provide(InMemoryChatRoom.buildLayer) // backendless version, runs the chat server within the browser
+//      .provide(ChatRoomWebSocketClient.buildLayer(java.net.InetAddress.getLocalHost.getHostAddress, 8080))
 
   private def drawChatRoom(chatRoom: ChatRoom, currentMessage: SubscriptionRef[String]): Shape =
     Shape.column(

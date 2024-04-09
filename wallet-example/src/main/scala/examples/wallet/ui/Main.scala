@@ -32,7 +32,9 @@ object Main extends ZIOWebApp {
 
   private def Balance(balance: Signal[Float]) =
     Shape.column(
-      Shape.text("Saldo").color(Color.primary.slightlyLight).centered,
+      Shape.text("Saldo")
+        .color(Color.primary.slightlyLight)
+        .centered,
       Shape.text(balance.map(b => f"${"$"} $b%.2f"))
         .color(Color.primary)
         .fontSize(Size.large)
@@ -41,8 +43,10 @@ object Main extends ZIOWebApp {
 
   private def Transactions(transactions: Stream[Throwable, Transaction]) =
     Shape.column(
-      Shape.text("Movimientos").color(Color.primary.moderatelyLight).margin(Size.mediumLarge),
-      Shape.column(transactions.map(transaction => TransactionStreamItem(transaction)))
+      Shape.text("Movimientos")
+        .color(Color.primary.moderatelyLight)
+        .margin(Size.mediumLarge),
+      Shape.column(transactions.map(TransactionStreamItem))
         .reverse
         .borderRadius(Size.medium)
         .backgroundColor(Color.surface),
@@ -101,7 +105,7 @@ object Main extends ZIOWebApp {
         transactionStream <- ZIO.attempt(
                                ZStream
                                  .repeatZIO(generateTransaction)
-                                 .throttleShape(1, 160.millis, 1)(_ => 1)
+                                 .throttleShape(1, 18.millis, 1)(_ => 1)
                                  .tap(updateBalance(balanceRef))
                                  .take(15)
                              )

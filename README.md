@@ -34,14 +34,45 @@ resolvers += "Sonatype OSS Snapshots" at "https://s01.oss.sonatype.org/content/r
 Development
 -----------
 
-* Create a Scala JS project (see `build.sbt` `examples` sub project)
+This library comes with a handy development server that helps you build and test your UI.
+
+* After you are done sketching your UI, add the server to your dependencies.
+  We suggest to do it on a separate sbt subproject:
+
+```scala
+libraryDependencies += "io.github.palanga" %% "picazio-web-dev-server" % "version"
+```
+
+* Then you can write a program like this, passing in the name of you UI subproject name:
+
+```scala
+import zio._
+
+object Main extends ZIOAppDefault {
+  override def run: ZIO[ZIOAppArgs, Throwable, Unit] = Server.start("ui")
+}
+```
+
+We suggest you to explore the different alternatives it has, typing `Server.` and letting the IDE do the rest.
+
+* Finally, run it with `sbt your_dev_server_subproject_name/run` and go to `http://localhost:9000`.
+  The server will watch any changes on you UI files and will recompile them and refresh the web page automatically.
+
+Alternatively, you can set up an index html file and compile the UI by your own:
+
+* Create a Scala JS project (see `build.sbt` `examples` subproject)
 * Create an `html` file and a scala entry point like in any other Scala JS project (see `examples`).
 * Compile and link with `sbt fastLinkJS`.
 * Open the html file in a browser.
 * Make changes and link again with `sbt fastLinkJS`.
 
-Testing
--------
+Build
+-----
+
+* For a production build run `sbt fullLinkJS`
+
+Testing this library
+--------------------
 
 We suggest using Selenium and installing browser drivers via npm. The following uses Chrome as the driver.
 
@@ -61,12 +92,7 @@ jsEnv in Test := new org.scalajs.jsenv.selenium.SeleniumJSEnv(new org.openqa.sel
   with `npm install chromedriver --save-dev`
 * Add to your PATH variable with `export PATH=$PATH:$PWD/node_modules/.bin`
 * Run tests with `sbt test`
-* Make sure your installed Chrome version is compatible with the driver version otherwise the last step will fail.
-
-Build
------
-
-* For a production build run `sbt fullLinkJS`
+* Make sure your installed Chrome version is compatible with the driver version, otherwise the last step will fail.
 
 [//]: # (links)
 
