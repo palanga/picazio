@@ -48,6 +48,7 @@ lazy val root =
     .aggregate(
       core,
       web,
+      web_dev_server,
       examples,
       chat_example_common,
       chat_example_server,
