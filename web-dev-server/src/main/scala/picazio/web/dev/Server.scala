@@ -3,9 +3,9 @@ package picazio.web.dev
 import zio.http.Header.AccessControlAllowOrigin
 import zio.http.Middleware.CorsConfig
 import zio.http.template.Html
-import zio.http.{Server as ZIOServer, *}
+import zio.http.{ Server as ZIOServer, * }
 import zio.stream.ZStream
-import zio.{Config as _, *}
+import zio.{ Config as _, * }
 
 object Server {
 

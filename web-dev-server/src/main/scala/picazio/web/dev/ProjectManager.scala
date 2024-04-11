@@ -1,7 +1,7 @@
 package picazio.web.dev
 
 import zio.stream.*
-import zio.{Config as _, *}
+import zio.{ Config as _, * }
 
 import java.io.File
 import scala.language.postfixOps
