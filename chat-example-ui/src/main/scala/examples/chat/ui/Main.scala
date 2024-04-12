@@ -9,7 +9,7 @@ object Main extends ZIOWebApp {
 
   private val scope = ZLayer.succeed(Scope.global)
 
-  override def root: Task[Shape] =
+  override def root: Task[Shape[Any]] =
     (for {
       chatRoom       <- ZIO.service[ChatRoom]
       currentMessage <- SubscriptionRef.make("")
@@ -17,18 +17,18 @@ object Main extends ZIOWebApp {
       .provide(InMemoryChatRoom.buildLayer) // backendless version, runs the chat server within the browser
 //      .provide(ChatRoomWebSocketClient.buildLayer(java.net.InetAddress.getLocalHost.getHostAddress, 8080))
 
-  private def drawChatRoom(chatRoom: ChatRoom, currentMessage: SubscriptionRef[String]): Shape =
+  private def drawChatRoom(chatRoom: ChatRoom, currentMessage: SubscriptionRef[String]) =
     Shape.column(
-      drawMessageStream(chatRoom),
-      drawMessageInput(chatRoom, currentMessage: SubscriptionRef[String]),
+      MessageStream(chatRoom),
+      MessageInput(chatRoom, currentMessage: SubscriptionRef[String]),
     )
 
-  private def drawMessageStream(chatRoom: ChatRoom): Shape =
-    Shape.column(chatRoom.readMessages.map(_.map(drawMessage)).provide(scope))
+  private def MessageStream(chatRoom: ChatRoom) =
+    Shape.column(chatRoom.readMessages.map(_.map(Message)).provide(scope))
 
-  private def drawMessage(message: String) = Shape.text(message)
+  private def Message(message: String) = Shape.text(message)
 
-  private def drawMessageInput(chatRoom: ChatRoom, currentMessage: SubscriptionRef[String]): Shape = {
+  private def MessageInput(chatRoom: ChatRoom, currentMessage: SubscriptionRef[String]) = {
 
     val sendCurrentMessageAndEraseInput: ZIO[Any, Nothing, Unit] =
       currentMessage.get.flatMap(message => chatRoom.sendMessage(message).when(message.nonEmpty)) *>

@@ -31,7 +31,7 @@ class CustomStylesTest extends WebInterpreterSpec with Matchers {
 
   testShape("dynamic custom styles can be added to shapes") { render =>
 
-    def shape(padding: Signal[Size]): Shape =
+    def shape(padding: Signal[Size]) =
       Shape
         .text("padding changing text")
         .paddingTop(padding)

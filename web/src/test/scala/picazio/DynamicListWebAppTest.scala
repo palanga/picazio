@@ -35,24 +35,24 @@ class DynamicListWebAppTest extends WebInterpreterSpec with Matchers {
 
     case class Item(title: String)
 
-    def drawTodosPage(state: TodosState) =
+    def TodosPage(state: TodosState) =
       Shape.column(
-        drawAddItemForm(state),
-        drawTodoList(state),
+        AddItemForm(state),
+        TodoList(state),
       )
 
-    def drawAddItemForm(state: TodosState) =
+    def AddItemForm(state: TodosState) =
       Shape.row(
         Shape.textInput("TODO item title...", state.newTodoTitleInput),
         Shape.button("ADD").onClick(state.addItem),
       )
 
-    def drawTodoList(state: TodosState) =
+    def TodoList(state: TodosState) =
       Shape.column(
-        state.items.signal.map(_.map(drawItem(state)))
+        state.items.signal.map(_.map(ItemShape(state)))
       )
 
-    def drawItem(state: TodosState)(item: Item): Shape =
+    def ItemShape(state: TodosState)(item: Item) =
       Shape.row(
         Shape.text(item.title),
         Shape.button(s"DONE ${item.title}").onClick(state.removeItem(item)),
@@ -60,7 +60,7 @@ class DynamicListWebAppTest extends WebInterpreterSpec with Matchers {
 
     for {
       state          <- TodosState.build
-      root           <- render(drawTodosPage(state))
+      root           <- render(TodosPage(state))
       input           = root.head.head
       addItemButton   = root.head.tail.head
       _              <- input.write("sleep")
@@ -80,7 +80,7 @@ class DynamicListWebAppTest extends WebInterpreterSpec with Matchers {
 
   testShape("numbers in a row") { render =>
 
-    def drawNumbers(numbers: SubscriptionRef[List[Int]]) =
+    def Numbers(numbers: SubscriptionRef[List[Int]]) =
       Shape.row(numbers.signal.map(_.map(number => Shape.text(number.toString))))
 
     def updateNumbers(numbers: SubscriptionRef[List[Int]], lastNumberRef: SubscriptionRef[Int]) =
@@ -92,7 +92,7 @@ class DynamicListWebAppTest extends WebInterpreterSpec with Matchers {
     for {
       numbers    <- SubscriptionRef.make(List.empty[Int])
       lastNumber <- SubscriptionRef.make(0)
-      root       <- render(drawNumbers(numbers))
+      root       <- render(Numbers(numbers))
       _          <- debounce(root shouldBe empty)
       _          <- updateNumbers(numbers, lastNumber).repeat(Schedule.recurs(2))
       result     <- debounce(root should have size 3)

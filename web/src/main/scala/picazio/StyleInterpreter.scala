@@ -16,7 +16,7 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
 
   private val theme: Theme = runtime.environment.get[Theme]
 
-  def applyTypography(shape: Shape)(styleModifiers: Seq[Modifier[Base]]): Seq[Modifier[Base]] =
+  def applyTypography(shape: Shape[?])(styleModifiers: Seq[Modifier[Base]]): Seq[Modifier[Base]] =
     shape match {
       case _: Text                 => (fontFamily := theme.typography) +: styleModifiers
       case _: StaticText           => (fontFamily := theme.typography) +: styleModifiers
@@ -31,14 +31,14 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
       case _                       => styleModifiers
     }
 
-  private[picazio] def applyStyles(shape: Shape)(element: ReactiveElement[Element]): ReactiveElement[Element] =
+  private[picazio] def applyStyles(shape: Shape[?])(element: ReactiveElement[Element]): ReactiveElement[Element] =
     defaultStylesForShape(shape)
       .pipe(applyTheme)
       .pipe(convertToLaminarStyleSetters(shape))
       .pipe(applyTypography(shape))
       .pipe(amendStyles(element))
 
-  private def defaultStylesForShape(shape: Shape): StyleSheet =
+  private def defaultStylesForShape(shape: Shape[?]): StyleSheet =
     shape match {
       case _: Text                => TextStyles.default
       case _: StaticText          => TextStyles.default
@@ -46,20 +46,20 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
       case _: SubscribedTextInput => InputTextStyles.default
       case _: SignaledTextInput   => InputTextStyles.default
       case _: Shape.Button        => ButtonStyles.default
-      case _: StaticColumn        => SequenceStyles.default
-      case _: DynamicColumn       => SequenceStyles.default
-      case _: StreamColumn        => SequenceStyles.default
-      case _: StaticRow           => SequenceStyles.default
-      case _: DynamicRow          => SequenceStyles.default
-      case _: Background          => BackgroundStyles.default
-      case _: OnClick             => OnClickStyles.default
+      case _: StaticColumn[?]     => SequenceStyles.default
+      case _: DynamicColumn[?]    => SequenceStyles.default
+      case _: StreamColumn[?]     => SequenceStyles.default
+      case _: StaticRow[?]        => SequenceStyles.default
+      case _: DynamicRow[?]       => SequenceStyles.default
+      case _: Background[?]       => BackgroundStyles.default
+      case _: OnClick[?, ?]       => OnClickStyles.default
       case Styled(styles, _)      => styles
       case _                      => StyleSheet.empty
     }
 
   private def applyTheme(styles: StyleSheet): ThemedStyles = picazio.theme.ThemedStyles(styles, theme)
 
-  private def convertToLaminarStyleSetters(shape: Shape)(themedStyles: ThemedStyles): Seq[Modifier[Base]] = {
+  private def convertToLaminarStyleSetters(shape: Shape[?])(themedStyles: ThemedStyles): Seq[Modifier[Base]] = {
     val ThemedStyles(styles, Theme(sizeMultiplier, _, colorPalette)) = themedStyles
     styles.values.flatMap {
       case MarginTop(size)    => Seq(marginTop := (size * sizeMultiplier).toString + "px")

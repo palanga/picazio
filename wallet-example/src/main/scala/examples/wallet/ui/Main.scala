@@ -16,7 +16,7 @@ object Main extends ZIOWebApp {
       .backgroundColor("efe1fd")
       .secondaryColor("4d9c5f")
 
-  override def root: Task[Shape] =
+  override def root: Task[Shape[Any]] =
     (for {
       account <- ZIO.service[Account]
     } yield Root(account))
@@ -68,7 +68,7 @@ object Main extends ZIOWebApp {
       .padding(Size.mediumLarge)
       .paddingTop(Size.small)
 
-  private def TransactionAmount(amount: Float): Shape =
+  private def TransactionAmount(amount: Float) =
     if (amount >= 0)
       Shape.text(f"+ $amount%,.2f")
         .color(Color.secondary)

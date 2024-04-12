@@ -30,7 +30,7 @@ trait WebInterpreterSpec extends AsyncFunSuite {
   def debounce[A](task: => A): Task[A] = ZIO.attempt(task).delay(0.seconds)
   def debounce: Task[Unit]             = ZIO.unit.delay(0.seconds)
 
-  type Renderer = Shape => Task[RenderedElement]
+  type Renderer = Shape[Any] => Task[RenderedElement]
 
   private def init = {
     val suiteRootList    = document.createElement("dl")
@@ -46,25 +46,26 @@ trait WebInterpreterSpec extends AsyncFunSuite {
   private def suiteClassSimpleName     = this.getClass.getSimpleName
   private def testId(testName: String) = s"$suiteClassName: $testName"
 
-  private def render(testName: String)(shape: Shape)(implicit unsafe: Unsafe): Task[RenderedElement] = ZIO.attempt {
+  private def render(testName: String)(shape: Shape[Any])(implicit unsafe: Unsafe): Task[RenderedElement] =
+    ZIO.attempt {
 
-    val testTitle = document.createElement("dt")
-    testTitle.textContent = testName
-    testTitle.setAttribute("style", """margin-top: 18; margin-bottom: 6""")
-    document.getElementById(suiteClassName).appendChild(testTitle)
+      val testTitle = document.createElement("dt")
+      testTitle.textContent = testName
+      testTitle.setAttribute("style", """margin-top: 18; margin-bottom: 6""")
+      document.getElementById(suiteClassName).appendChild(testTitle)
 
-    val testRoot = document.createElement("dd")
-    testRoot.setAttribute("id", testId(testName))
-    testRoot.setAttribute("style", """display: flex; border: solid; border-width: 10; border-color: lightgray""")
-    document.getElementById(suiteClassName).appendChild(testRoot)
+      val testRoot = document.createElement("dd")
+      testRoot.setAttribute("id", testId(testName))
+      testRoot.setAttribute("style", """display: flex; border: solid; border-width: 10; border-color: lightgray""")
+      document.getElementById(suiteClassName).appendChild(testRoot)
 
-    renderLaminar(
-      testRoot,
-      new ShapeInterpreter().asLaminarElement(shape),
-    )
+      renderLaminar(
+        testRoot,
+        new ShapeInterpreter().asLaminarElement(shape),
+      )
 
-    RenderedElement.fromDomElement(document.getElementById(testId(testName)).firstElementChild)
+      RenderedElement.fromDomElement(document.getElementById(testId(testName)).firstElementChild)
 
-  }
+    }
 
 }

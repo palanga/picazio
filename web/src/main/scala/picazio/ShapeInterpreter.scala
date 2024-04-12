@@ -16,11 +16,11 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
   private val styleInterpreter = new StyleInterpreter()
 
-  private[picazio] def asLaminarElement(shape: Shape): ReactiveElement[Element] =
+  private[picazio] def asLaminarElement(shape: Shape[Any]): ReactiveElement[Element] =
     convertToLaminarReactiveElement(shape) pipe styleInterpreter.applyStyles(shape)
 
   @tailrec
-  private def convertToLaminarReactiveElement(shape: Shape): ReactiveElement[Element] = {
+  private def convertToLaminarReactiveElement(shape: Shape[Any]): ReactiveElement[Element] = {
     shape match {
 
       case StaticText(content) => span(content)
@@ -176,7 +176,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
   }
 
   @tailrec
-  private def isColumn(inner: Shape): Boolean = inner match {
+  private def isColumn(inner: Shape[?]): Boolean = inner match {
     case StaticColumn(_)         => true
     case DynamicColumn(_)        => true
     case StreamColumn(_)         => true

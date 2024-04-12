@@ -7,7 +7,7 @@ import zio.*
 
 trait ZIOWebApp {
 
-  def root: Task[Shape]
+  def root: Task[Shape[Any]]
 
   def theme: Theme = Theme.default
 
