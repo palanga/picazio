@@ -16,9 +16,14 @@ object FileWatcher {
     hub           <- Hub.sliding[String](1)
     javaWatcher   <- ZIO.attemptBlocking(FileSystems.getDefault.newWatchService())
     directoryPath <- ZIO.attemptBlocking(Paths.get(path))
-    _             <- register(directoryPath, javaWatcher)
-    _             <- process(hub, javaWatcher).forever.forkDaemon
+    _             <- startWatching(directoryPath, javaWatcher, hub).forkDaemon
   } yield new FileWatcher(hub)
+
+  private def startWatching(directoryPath: Path, javaWatcher: WatchService, hub: Hub[String]) =
+    for {
+      _ <- register(directoryPath, javaWatcher).retry(Schedule.forever.delayed(_ => 1.second))
+      _ <- process(hub, javaWatcher).forever
+    } yield ()
 
   private def register(directoryPath: Path, javaWatcher: WatchService) =
     ZIO.attemptBlocking(

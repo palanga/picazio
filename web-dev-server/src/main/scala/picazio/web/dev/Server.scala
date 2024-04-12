@@ -52,8 +52,13 @@ object Server {
       ),
 
       // main js file
-      Method.GET / "js" -> Handler.fromFileZIO(
+      Method.GET / "main.js" -> Handler.fromFileZIO(
         ZIO.serviceWithZIO[ProjectManager](_.getMainJSFile)
+      ),
+
+      // main js map file
+      Method.GET / "main.js.map" -> Handler.fromFileZIO(
+        ZIO.serviceWithZIO[ProjectManager](_.getMainJSMapFile)
       ),
 
       // watch main js updates to trigger a refresh

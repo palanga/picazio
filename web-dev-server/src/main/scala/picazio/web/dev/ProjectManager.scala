@@ -10,6 +10,7 @@ import scala.sys.process.*
 trait ProjectManager {
   def buildJs: Task[Unit]
   def getMainJSFile: Task[File]
+  def getMainJSMapFile: Task[File]
   def getIndexHTML: Task[String]
   def watchMainJS: ZIO[Scope, Nothing, ZStream[Any, Nothing, String]]
 }
@@ -29,6 +30,8 @@ object ProjectManager {
 final class UsefulProjectManager(config: Config, fileWatcher: FileWatcher) extends ProjectManager {
 
   override def getMainJSFile: Task[File] = ZIO.attempt(new File(s"${config.targetJsFolder}/main.js"))
+
+  override def getMainJSMapFile: Task[File] = ZIO.attempt(new File(s"${config.targetJsFolder}/main.js.map"))
 
   override def buildJs: Task[Unit] =
     if (config.isDev)
@@ -52,7 +55,7 @@ final class UsefulProjectManager(config: Config, fileWatcher: FileWatcher) exten
         |<meta name="viewport" content="width=device-width, initial-scale=1"/>
         |<body style="margin: 0">
         |<!-- Include Scala.js compiled code -->
-        |<script type="text/javascript" src="http://$host:$port/js"></script>
+        |<script type="text/javascript" src="http://$host:$port/main.js"></script>
         |<script type="text/javascript">
         |    var socket = new WebSocket("ws://$host:$port/refresh");
         |    socket.addEventListener("message", event => location.reload());
