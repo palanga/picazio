@@ -40,4 +40,36 @@ class StreamWebAppTest extends WebInterpreterSpec with Matchers {
 
   }
 
+  testShape("an eventual stream column") { render =>
+
+    def EventualStreamColumn(eventualMessageStream: Task[Stream[Throwable, String]]) =
+      Shape.column(eventualMessageStream.map(_.map(Shape.text)))
+
+    for {
+      queue         <- Queue.sliding[String](2)
+      stream         = ZStream.fromQueue(queue)
+      finishLoading <- SubscriptionRef.make(false)
+      eventualStream = ZIO.suspendSucceed(finishLoading.changes.takeUntil(identity).runDrain.as(stream))
+      root          <- render(Shape.column(EventualStreamColumn(eventualStream)))
+      _             <- debounce {
+                         root should have size 1
+                         root should have size 1
+                         root.head.tag shouldBe "span"
+                         root.head.text shouldBe "loading..."
+                         root.head.styles should contain("display" -> "none")
+                       }
+      _             <- finishLoading.set(true)
+      _             <- debounce
+      _             <- queue.offer("first")
+      _             <- debounce {
+                         root should have size 1
+                         root.head.tag shouldBe "div"
+                         root.head.head.text shouldBe "first"
+                       }
+      _             <- queue.offer("second")
+      result        <- debounce(root.head.tail.head.text shouldBe "second")
+    } yield result
+
+  }
+
 }

@@ -12,7 +12,7 @@ object Main extends WebApp {
 
   private def dependencies = ZLayer.succeed(Quotes.default)
 
-  private def printNextQuote = ZIO.serviceWithZIO[Quotes](_.nextQuote).debug.unit
+  private def printNextQuote = ZIO.serviceWithZIO[Quotes](_.nextQuote).unit
 
 }
 

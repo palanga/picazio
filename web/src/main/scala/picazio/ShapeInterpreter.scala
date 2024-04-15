@@ -161,6 +161,18 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
       case OnInputFilter(filter, Styled(_, inner)) => asLaminarElement(OnInputFilter(filter, inner))
 
+      case Eventual(content) =>
+//        val loading = asLaminarElement(Shape.text("loading...")) // TODO
+        val loading       = span("loading...", display.none)
+        def loadingParent = loading.maybeParent.get // this has to be lazy
+        runtime.unsafe.runToFuture(
+          content.flatMap(shape =>
+            ZIO.attempt(ParentNode.replaceChild(loadingParent, loading, asLaminarElement(shape)))
+              .delay(0.second) // debounce to let the loading have a parent (tests fail otherwise)
+          )
+        )
+        loading
+
       case OnInput(_, inner) =>
         throw new IllegalArgumentException(
           s"Can't add an on input handler to a non input element: ${inner.getClass.getName}"

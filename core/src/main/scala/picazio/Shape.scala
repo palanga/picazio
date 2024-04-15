@@ -1,4 +1,4 @@
-// scalafmt: { maxColumn = 150 }
+// scalafmt: { maxColumn = 180 }
 package picazio
 
 import picazio.style.StyleSheet
@@ -9,7 +9,9 @@ object Shape {
 
   def text(content: String): Shape[Any]                                        = StaticText(content)
   def text(content: Signal[String]): Shape[Any]                                = Text(content)
-  def textInput(): Shape[Any]                                                  = TextInput("")
+  def text[R](content: ZIO[R, Throwable, String]): Shape[R]                    = Eventual(content.map(StaticText.apply))
+  def text[R, A: Tag](content: ZIO[R, Throwable, Signal[String]]): Shape[R]    = Eventual(content.map(Text.apply)) // the A: Tag here is to prevent double definition after erasure
+  def textInput: Shape[Any]                                                    = TextInput("")
   def textInput(placeholder: String): Shape[Any]                               = TextInput(placeholder)
   def textInput(ref: SubscriptionRef[String]): Shape[Any]                      = SubscribedTextInput("", ref)
   def textInput(placeholder: String, ref: SubscriptionRef[String]): Shape[Any] = SubscribedTextInput(placeholder, ref)
@@ -17,12 +19,13 @@ object Shape {
   def textInput(placeholder: String, signal: Signal[String]): Shape[Any]       = SignaledTextInput(placeholder, signal)
   def button(content: String): Shape[Any]                                      = Button(content)
   def background[R](content: Shape[R]): Shape[R]                               = Background(content)
-  def column[R](content: Shape[R]*): Shape[R]                                  = StaticColumn[R](content)
-  def column[R](content: Signal[Seq[Shape[R]]]): Shape[R]                      = DynamicColumn[R](content)
-  def column[R](content: Stream[Throwable, Shape[R]]): Shape[R]                = StreamColumn[R](content)
-  def column[R](content: Task[Stream[Throwable, Shape[R]]]): Shape[R]          = ZIOStreamColumn[R](content)
-  def row[R](content: Shape[R]*): Shape[R]                                     = StaticRow[R](content)
-  def row[R](content: Signal[Seq[Shape[R]]]): Shape[R]                         = DynamicRow[R](content)
+  def column[R](content: Shape[R]*): Shape[R]                                  = StaticColumn(content)
+  def column[R](content: Signal[Seq[Shape[R]]]): Shape[R]                      = DynamicColumn(content)
+  def column[R](content: Stream[Throwable, Shape[R]]): Shape[R]                = StreamColumn(content)
+  def column[R](content: Task[Stream[Throwable, Shape[R]]]): Shape[R]          = Eventual(content.map(StreamColumn(_)))
+  def row[R](content: Shape[R]*): Shape[R]                                     = StaticRow(content)
+  def row[R](content: Signal[Seq[Shape[R]]]): Shape[R]                         = DynamicRow(content)
+  def eventual[R, R1](content: ZIO[R1, Throwable, Shape[R]]): Shape[R & R1]    = Eventual(content)
 
   final private[picazio] case class StaticText(content: String)                                                   extends Shape[Any]
   final private[picazio] case class Text(content: Signal[String])                                                 extends Shape[Any]
@@ -44,6 +47,7 @@ object Shape {
   final private[picazio] case class OnClick[R, R1](action: ZIO[R1, Throwable, Unit], inner: Shape[R])             extends Shape[R & R1]
   final private[picazio] case class OnInput[R, R1](action: String => ZIO[R1, Throwable, Unit], inner: Shape[R])   extends Shape[R & R1]
   final private[picazio] case class OnKeyPressed[R, R1](action: Int => ZIO[R1, Throwable, Unit], inner: Shape[R]) extends Shape[R & R1]
+  final private[picazio] case class Eventual[R, R1](content: ZIO[R1, Throwable, Shape[R]])                        extends Shape[R & R1]
 
 }
 
@@ -100,6 +104,7 @@ sealed trait Shape[-R] {
     case s @ Shape.OnClick(action, inner)      => s.copy(action.provide(layer), inner.provide(layer))
     case s @ Shape.OnInput(action, inner)      => s.copy(action(_).provide(layer), inner.provide(layer))
     case s @ Shape.OnKeyPressed(action, inner) => s.copy(action(_).provide(layer), inner.provide(layer))
+    case s @ Shape.Eventual(content)           => s.copy(content.provide(layer).map(_.provide(layer)))
   }
 
 }

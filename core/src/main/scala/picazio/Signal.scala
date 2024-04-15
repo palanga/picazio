@@ -13,7 +13,16 @@ trait Signal[+A] {
 }
 
 object Signal {
-  def fromRef[A](ref: SubscriptionRef[A]) = new SingleSignal(ref)
+
+  def fromRef[A](ref: SubscriptionRef[A]): Signal[A] = new SingleSignal(ref)
+
+  def fromStream[A](stream: Stream[Throwable, A]): Task[Signal[A]] =
+    for {
+      head <- stream.take(1).runHead.someOrFailException
+      ref  <- SubscriptionRef.make(head)
+      _    <- stream.mapZIO(element => ref.set(element)).runDrain.forkDaemon
+    } yield new SingleSignal(ref)
+
 }
 
 final private[picazio] class SingleSignal[A](underlying: SubscriptionRef[A]) extends Signal[A] {
