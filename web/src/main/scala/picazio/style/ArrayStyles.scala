@@ -1,9 +1,9 @@
 package picazio.style
 
 /**
- * Default styles for Column and Row
+ * Default styles for columns and rows
  */
-object SequenceStyles {
+object ArrayStyles {
   val default: StyleSheet =
     StyleSheet.fromStyles(
       Style.Overflowing(Overflow.Hidden)

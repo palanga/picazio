@@ -1,11 +1,12 @@
 package picazio
 
+import com.raquo.airstream.eventbus.EventBus
+import com.raquo.laminar.CollectionCommand
 import com.raquo.laminar.api.L.{ button as laminarButton, * }
 import com.raquo.laminar.nodes.*
 import org.scalajs.dom.{ console, Element }
 import picazio.Shape.*
 import picazio.signal.toLaminarSignal
-import picazio.stream.toLaminarCommandStream
 import picazio.theme.Theme
 import zio.*
 
@@ -54,39 +55,34 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
         val flexModifier = if (isColumn(inner)) flexDirection.columnReverse else flexDirection.rowReverse
         amendHtmlOrEcho(asLaminarElement(inner))(flexModifier)
 
-      case StaticColumn(content) =>
+      case StaticArray(shapes, direction) =>
         div(
-          content.map(asLaminarElement),
+          shapes.map(asLaminarElement),
           display.flex,
-          flexDirection.column,
+          asFlexDirection(direction),
         )
 
-      case DynamicColumn(content) =>
+      case SignaledArray(shapes, direction) =>
         div(
-          children <-- toLaminarSignal(content).map(_.map(asLaminarElement)),
+          children <-- toLaminarSignal(shapes).map(_.map(asLaminarElement)),
           display.flex,
-          flexDirection.column,
+          asFlexDirection(direction),
         )
 
-      case StreamColumn(content) =>
-        div(
-          children.command <-- toLaminarCommandStream(content, asLaminarElement, CollectionCommand.Append.apply),
-          display.flex,
-          flexDirection.column,
+      case StreamedArray(shapes, direction) =>
+        val commandBus = new EventBus[CollectionCommand.Base]
+        runtime.unsafe.runToFuture(
+          shapes
+            .map(asLaminarElement)
+            .map(CollectionCommand.Append.apply)
+            // TODO explore if the following shouldn't be a flatMap of a ZIO.attempt(commandBus.emit)
+            .map(commandBus.emit)
+            .runDrain
         )
-
-      case StaticRow(content) =>
         div(
-          content.map(asLaminarElement),
+          children.command <-- commandBus.events,
           display.flex,
-          flexDirection.row,
-        )
-
-      case DynamicRow(content) =>
-        div(
-          children <-- toLaminarSignal(content).map(_.map(asLaminarElement)),
-          display.flex,
-          flexDirection.row,
+          asFlexDirection(direction),
         )
 
       case OnClick(task, inner) =>
@@ -177,6 +173,11 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
   }
 
+  private def asFlexDirection(direction: Direction) = direction match {
+    case Direction.Column => flexDirection.column
+    case Direction.Row    => flexDirection.row
+  }
+
   private def renderEventualAndReplaceLoading(
     eventual: ZIO[Any, Throwable, Shape[Any]],
     loading: ReactiveElement.Base,
@@ -193,27 +194,25 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
   @tailrec
   private def isColumn(inner: Shape[?]): Boolean = inner match {
-    case StaticText(_)             => invalid
-    case Text(_)                   => invalid
-    case TextInput(_)              => invalid
-    case SubscribedTextInput(_, _) => invalid
-    case SignaledTextInput(_, _)   => invalid
-    case Button(_)                 => invalid
-    case Background(_)             => invalid
-    case StaticColumn(_)           => true
-    case DynamicColumn(_)          => true
-    case StreamColumn(_)           => true
-    case StaticRow(_)              => false
-    case DynamicRow(_)             => false
-    case Focused(_)                => invalid
-    case Reversed(inner)           => isColumn(inner)
-    case OnInputFilter(_, _)       => invalid
-    case Styled(_, inner)          => isColumn(inner)
-    case OnClick(_, inner)         => isColumn(inner)
-    case OnInput(_, inner)         => isColumn(inner)
-    case OnKeyPressed(_, inner)    => isColumn(inner)
-    case Eventual(_)               => invalid
-    case Loading(_, _)             => invalid
+    case StaticText(_)               => invalid
+    case Text(_)                     => invalid
+    case TextInput(_)                => invalid
+    case SubscribedTextInput(_, _)   => invalid
+    case SignaledTextInput(_, _)     => invalid
+    case Button(_)                   => invalid
+    case Background(_)               => invalid
+    case StaticArray(_, direction)   => direction.isInstanceOf[Direction.Column.type]
+    case SignaledArray(_, direction) => direction.isInstanceOf[Direction.Column.type]
+    case StreamedArray(_, direction) => direction.isInstanceOf[Direction.Column.type]
+    case Focused(_)                  => invalid
+    case Reversed(inner)             => isColumn(inner)
+    case OnInputFilter(_, _)         => invalid
+    case Styled(_, inner)            => isColumn(inner)
+    case OnClick(_, inner)           => isColumn(inner)
+    case OnInput(_, inner)           => isColumn(inner)
+    case OnKeyPressed(_, inner)      => isColumn(inner)
+    case Eventual(_)                 => invalid
+    case Loading(_, _)               => invalid
   }
 
   private def invalid = {

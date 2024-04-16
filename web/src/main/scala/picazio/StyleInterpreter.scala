@@ -46,11 +46,9 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
       case _: SubscribedTextInput => InputTextStyles.default
       case _: SignaledTextInput   => InputTextStyles.default
       case _: Shape.Button        => ButtonStyles.default
-      case _: StaticColumn[?]     => SequenceStyles.default
-      case _: DynamicColumn[?]    => SequenceStyles.default
-      case _: StreamColumn[?]     => SequenceStyles.default
-      case _: StaticRow[?]        => SequenceStyles.default
-      case _: DynamicRow[?]       => SequenceStyles.default
+      case _: StaticArray[?]      => ArrayStyles.default
+      case _: SignaledArray[?]    => ArrayStyles.default
+      case _: StreamedArray[?]    => ArrayStyles.default
       case _: Background[?]       => BackgroundStyles.default
       case _: OnClick[?, ?]       => OnClickStyles.default
       case Styled(styles, _)      => styles

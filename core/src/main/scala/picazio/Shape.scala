@@ -1,31 +1,41 @@
-// scalafmt: { maxColumn = 180 }
+// scalafmt: { maxColumn = 200 }
 package picazio
 
 import picazio.style.StyleSheet
 import zio.*
 import zio.stream.*
 
+// TODO
+// * enrutador y navegación
+// * iconos
+// * imágenes
+// * videos
+// * surface (material design)
+// * manejo de errores
+// * ZIOWebApp ya no tiene sentido?
 object Shape {
 
-  def text(content: String): Shape[Any]                                        = StaticText(content)
-  def text(content: Signal[String]): Shape[Any]                                = Text(content)
-  def text[R](content: ZIO[R, Throwable, String]): Shape[R]                    = Eventual(content.map(StaticText.apply))
-  def text[R, A: Tag](content: ZIO[R, Throwable, Signal[String]]): Shape[R]    = Eventual(content.map(Text.apply)) // the A: Tag here is to prevent double definition after erasure
-  def textInput: Shape[Any]                                                    = TextInput("")
-  def textInput(placeholder: String): Shape[Any]                               = TextInput(placeholder)
-  def textInput(ref: SubscriptionRef[String]): Shape[Any]                      = SubscribedTextInput("", ref)
-  def textInput(placeholder: String, ref: SubscriptionRef[String]): Shape[Any] = SubscribedTextInput(placeholder, ref)
-  def textInput(signal: Signal[String]): Shape[Any]                            = SignaledTextInput("", signal)
-  def textInput(placeholder: String, signal: Signal[String]): Shape[Any]       = SignaledTextInput(placeholder, signal)
-  def button(content: String): Shape[Any]                                      = Button(content)
-  def background[R](content: Shape[R]): Shape[R]                               = Background(content)
-  def column[R](content: Shape[R]*): Shape[R]                                  = StaticColumn(content)
-  def column[R](content: Signal[Seq[Shape[R]]]): Shape[R]                      = DynamicColumn(content)
-  def column[R](content: Stream[Throwable, Shape[R]]): Shape[R]                = StreamColumn(content)
-  def column[R](content: Task[Stream[Throwable, Shape[R]]]): Shape[R]          = Eventual(content.map(StreamColumn(_)))
-  def row[R](content: Shape[R]*): Shape[R]                                     = StaticRow(content)
-  def row[R](content: Signal[Seq[Shape[R]]]): Shape[R]                         = DynamicRow(content)
-  def eventual[R, R1](content: ZIO[R1, Throwable, Shape[R]]): Shape[R & R1]    = Eventual(content)
+  def text(content: String): Shape[Any]                                                      = StaticText(content)
+  def text(content: Signal[String]): Shape[Any]                                              = Text(content)
+  def text[R](content: ZIO[R, Throwable, String]): Shape[R]                                  = Eventual(content.map(StaticText.apply))
+  def text[R, A: Tag](content: ZIO[R, Throwable, Signal[String]]): Shape[R]                  = Eventual(content.map(Text.apply)) // the A: Tag here is a hack to prevent double definition after erasure
+  def textInput: Shape[Any]                                                                  = TextInput("")
+  def textInput(placeholder: String): Shape[Any]                                             = TextInput(placeholder)
+  def textInput(ref: SubscriptionRef[String]): Shape[Any]                                    = SubscribedTextInput("", ref)
+  def textInput(placeholder: String, ref: SubscriptionRef[String]): Shape[Any]               = SubscribedTextInput(placeholder, ref)
+  def textInput(signal: Signal[String]): Shape[Any]                                          = SignaledTextInput("", signal)
+  def textInput(placeholder: String, signal: Signal[String]): Shape[Any]                     = SignaledTextInput(placeholder, signal)
+  def button(content: String): Shape[Any]                                                    = Button(content)
+  def background[R](content: Shape[R]): Shape[R]                                             = Background(content)
+  def column[R](content: Shape[R]*): Shape[R]                                                = StaticArray(content, Direction.Column)
+  def column[R](content: Signal[Seq[Shape[R]]]): Shape[R]                                    = SignaledArray(content, Direction.Column)
+  def column[R](content: Stream[Throwable, Shape[R]]): Shape[R]                              = StreamedArray(content, Direction.Column)
+  def column[R, R1](content: ZIO[R1, Throwable, Stream[Throwable, Shape[R]]]): Shape[R & R1] = Eventual(content.map(StreamedArray(_, Direction.Column)))
+  def row[R](content: Shape[R]*): Shape[R]                                                   = StaticArray(content, Direction.Row)
+  def row[R](content: Signal[Seq[Shape[R]]]): Shape[R]                                       = SignaledArray(content, Direction.Row)
+  def row[R](content: Stream[Throwable, Shape[R]]): Shape[R]                                 = StreamedArray(content, Direction.Row)
+  def row[R, R1](content: ZIO[R1, Throwable, Stream[Throwable, Shape[R]]]): Shape[R & R1]    = Eventual(content.map(StreamedArray(_, Direction.Row)))
+  def eventual[R, R1](content: ZIO[R1, Throwable, Shape[R]]): Shape[R & R1]                  = Eventual(content)
 
   final private[picazio] case class StaticText(content: String)                                                   extends Shape[Any]
   final private[picazio] case class Text(content: Signal[String])                                                 extends Shape[Any]
@@ -34,11 +44,9 @@ object Shape {
   final private[picazio] case class SignaledTextInput(placeholder: String, signal: Signal[String])                extends Shape[Any]
   final private[picazio] case class Button(content: String)                                                       extends Shape[Any]
   final private[picazio] case class Background[R](inner: Shape[R])                                                extends Shape[R]
-  final private[picazio] case class StaticColumn[R](content: Seq[Shape[R]])                                       extends Shape[R]
-  final private[picazio] case class DynamicColumn[R](content: Signal[Seq[Shape[R]]])                              extends Shape[R]
-  final private[picazio] case class StreamColumn[R](content: Stream[Throwable, Shape[R]])                         extends Shape[R]
-  final private[picazio] case class StaticRow[R](content: Seq[Shape[R]])                                          extends Shape[R]
-  final private[picazio] case class DynamicRow[R](content: Signal[Seq[Shape[R]]])                                 extends Shape[R]
+  final private[picazio] case class StaticArray[R](shapes: Seq[Shape[R]], direction: Direction)                   extends Shape[R]
+  final private[picazio] case class SignaledArray[R](shapes: Signal[Seq[Shape[R]]], direction: Direction)         extends Shape[R]
+  final private[picazio] case class StreamedArray[R](shapes: Stream[Throwable, Shape[R]], direction: Direction)   extends Shape[R]
   final private[picazio] case class Focused[R](inner: Shape[R])                                                   extends Shape[R]
   final private[picazio] case class Reversed[R](inner: Shape[R])                                                  extends Shape[R]
   final private[picazio] case class OnInputFilter[R](filter: String => Boolean, inner: Shape[R])                  extends Shape[R]
@@ -102,11 +110,9 @@ sealed trait Shape[-R] {
     case s @ Shape.SignaledTextInput(_, _)     => s
     case s @ Shape.Button(_)                   => s
     case s @ Shape.Background(inner)           => s.copy(inner.provide(layer))
-    case s @ Shape.StaticColumn(content)       => s.copy(content.map(_.provide(layer)))
-    case s @ Shape.DynamicColumn(content)      => s.copy(content.map(_.map(_.provide(layer))))
-    case s @ Shape.StreamColumn(content)       => s.copy(content.map(_.provide(layer)))
-    case s @ Shape.StaticRow(content)          => s.copy(content.map(_.provide(layer)))
-    case s @ Shape.DynamicRow(content)         => s.copy(content.map(_.map(_.provide(layer))))
+    case s @ Shape.StaticArray(content, _)     => s.copy(content.map(_.provide(layer)))
+    case s @ Shape.SignaledArray(content, _)   => s.copy(content.map(_.map(_.provide(layer))))
+    case s @ Shape.StreamedArray(content, _)   => s.copy(content.map(_.provide(layer)))
     case s @ Shape.Focused(inner)              => s.copy(inner.provide(layer))
     case s @ Shape.Reversed(inner)             => s.copy(inner.provide(layer))
     case s @ Shape.OnInputFilter(_, inner)     => s.copy(inner = inner.provide(layer))
