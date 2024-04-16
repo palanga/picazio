@@ -6,19 +6,26 @@ import zio.*
 import zio.stream.*
 
 // TODO
+// * plantilla gitter 8
+// * que cambie de color el botón cuando lo apretás
+// * el botón en iOS tiene letra color azul
+// * la entrada de texto en iOS tiene borde redondeado
+// * aprender de SubscriptionRef.changes como usan ZStream.unwrapScoped y aplicarlo en Signal.fromStream y los ejemplos
 // * enrutador y navegación
 // * iconos
+// * flotantes
 // * imágenes
 // * videos
 // * surface (material design)
 // * manejo de errores
+// * listas mutables atómicas reactivas
 // * ZIOWebApp ya no tiene sentido?
 object Shape {
 
   def text(content: String): Shape[Any]                                                      = StaticText(content)
   def text(content: Signal[String]): Shape[Any]                                              = Text(content)
   def text[R](content: ZIO[R, Throwable, String]): Shape[R]                                  = Eventual(content.map(StaticText.apply))
-  def text[R, A: Tag](content: ZIO[R, Throwable, Signal[String]]): Shape[R]                  = Eventual(content.map(Text.apply)) // the A: Tag here is a hack to prevent double definition after erasure
+  def text[R, A: Tag](content: ZIO[R, Throwable, Signal[String]]): Shape[R]                  = Eventual(content.map(Text.apply)) // the `A: Tag` here is a hack to prevent double definition after erasure
   def textInput: Shape[Any]                                                                  = TextInput("")
   def textInput(placeholder: String): Shape[Any]                                             = TextInput(placeholder)
   def textInput(ref: SubscriptionRef[String]): Shape[Any]                                    = SubscribedTextInput("", ref)

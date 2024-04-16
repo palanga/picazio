@@ -23,7 +23,7 @@ trait WebInterpreterSpec extends AsyncFunSuite {
   def testShape(testName: String)(f: Renderer => Task[Assertion]): Unit =
     test(testName)(
       Unsafe.unsafe { implicit unsafe =>
-        runtime.unsafe.runToFuture(f(render(testName)(_)))
+        runtime.unsafe.runToFuture(f(render(testName)(_)).logError)
       }
     )
 

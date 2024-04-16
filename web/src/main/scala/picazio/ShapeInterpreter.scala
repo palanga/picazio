@@ -78,6 +78,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
             // TODO explore if the following shouldn't be a flatMap of a ZIO.attempt(commandBus.emit)
             .map(commandBus.emit)
             .runDrain
+            .ignoreLogged
         )
         div(
           children.command <-- commandBus.events,
@@ -86,13 +87,13 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
         )
 
       case OnClick(task, inner) =>
-        val runOnClick = onClick --> { _ => runtime.unsafe.runToFuture(task) }
+        val runOnClick = onClick --> { _ => runtime.unsafe.runToFuture(task.ignoreLogged) }
         asLaminarElement(inner).amend(runOnClick)
 
       case OnInput(action, TextInput(_placeholder)) =>
         input(
           placeholder := _placeholder,
-          onInput.mapToValue --> { current => runtime.unsafe.runToFuture(action(current)) },
+          onInput.mapToValue --> { current => runtime.unsafe.runToFuture(action(current).ignoreLogged) },
         )
 
       case OnInput(action, SubscribedTextInput(_placeholder, ref)) =>
@@ -100,7 +101,9 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           placeholder := _placeholder,
           controlled(
             value <-- toLaminarSignal(ref.signal),
-            onInput.mapToValue --> { current => runtime.unsafe.runToFuture(ref.set(current) <* action(current)) },
+            onInput.mapToValue --> { current =>
+              runtime.unsafe.runToFuture(ref.set(current) <* action(current).ignoreLogged)
+            },
           ),
         )
 
@@ -109,10 +112,10 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
         def handleOnInput(current: String): Unit = {
           state.set(current)
-          runtime.unsafe.runToFuture(action(current))
+          runtime.unsafe.runToFuture(action(current).ignoreLogged)
         }
 
-        runtime.unsafe.runToFuture(signal.changes.map(state.set).runDrain)
+        runtime.unsafe.runToFuture(signal.changes.map(state.set).runDrain.ignoreLogged)
         input(
           placeholder := _placeholder,
           controlled(
@@ -122,7 +125,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
         )
 
       case OnKeyPressed(action, inner) =>
-        val runOnKeyPressed = onKeyDown --> { event => runtime.unsafe.runToFuture(action(event.keyCode)) }
+        val runOnKeyPressed = onKeyDown --> { event => runtime.unsafe.runToFuture(action(event.keyCode).ignoreLogged) }
         asLaminarElement(inner).amend(runOnKeyPressed)
 
       case OnInputFilter(filter, SubscribedTextInput(_placeholder, ref)) =>
@@ -130,10 +133,10 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
         def handleOnInput(current: String): Unit = {
           state.set(current)
-          runtime.unsafe.runToFuture(ref.set(current))
+          runtime.unsafe.runToFuture(ref.set(current).ignoreLogged)
         }
 
-        runtime.unsafe.runToFuture(ref.changes.filter(filter).map(state.set).runDrain)
+        runtime.unsafe.runToFuture(ref.changes.filter(filter).map(state.set).runDrain.ignoreLogged)
         input(
           placeholder := _placeholder,
           controlled(
@@ -187,7 +190,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
       eventual.flatMap(shape =>
         ZIO.attempt(ParentNode.replaceChild(loadingParent, loading, asLaminarElement(shape)))
           .delay(0.second) // debounce to let the loading have a parent (tests fail otherwise)
-      )
+      ).ignoreLogged
     )
     loading
   }
@@ -201,9 +204,9 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
     case SignaledTextInput(_, _)     => invalid
     case Button(_)                   => invalid
     case Background(_)               => invalid
-    case StaticArray(_, direction)   => direction.isInstanceOf[Direction.Column.type]
-    case SignaledArray(_, direction) => direction.isInstanceOf[Direction.Column.type]
-    case StreamedArray(_, direction) => direction.isInstanceOf[Direction.Column.type]
+    case StaticArray(_, direction)   => direction.isColumn
+    case SignaledArray(_, direction) => direction.isColumn
+    case StreamedArray(_, direction) => direction.isColumn
     case Focused(_)                  => invalid
     case Reversed(inner)             => isColumn(inner)
     case OnInputFilter(_, _)         => invalid
