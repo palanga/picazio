@@ -1,10 +1,11 @@
 package picazio
 
-import picazio.syntax.SignalSyntax
-import zio.stream.SubscriptionRef
+import picazio.syntax.*
+import zio.stream.*
 
 import scala.language.implicitConversions
 
 trait SignalModule {
-  implicit def signalSubscriptionRef[A](ref: SubscriptionRef[A]): SignalSyntax[A] = new SignalSyntax[A](ref)
+  implicit def signalSubscriptionRef[A](ref: SubscriptionRef[A]): RefSignalSyntax[A] = new RefSignalSyntax[A](ref)
+  implicit def signalStream[A](stream: Stream[Throwable, A]): StreamSignalSyntax[A]  = new StreamSignalSyntax[A](stream)
 }
