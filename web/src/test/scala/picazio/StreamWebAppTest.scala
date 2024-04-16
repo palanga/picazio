@@ -61,9 +61,12 @@ class StreamWebAppTest extends WebInterpreterSpec with Matchers {
       _             <- finishLoading.set(true)
       _             <- debounce
       _             <- queue.offer("first")
+      _             <- debounce
+      _             <- debounce
       _             <- debounce {
                          root should have size 1
                          root.head.tag shouldBe "div"
+                         root.head should have size 1
                          root.head.head.text shouldBe "first"
                        }
       _             <- queue.offer("second")

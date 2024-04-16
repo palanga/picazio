@@ -37,7 +37,6 @@ object Shape {
   final private[picazio] case class StaticColumn[R](content: Seq[Shape[R]])                                       extends Shape[R]
   final private[picazio] case class DynamicColumn[R](content: Signal[Seq[Shape[R]]])                              extends Shape[R]
   final private[picazio] case class StreamColumn[R](content: Stream[Throwable, Shape[R]])                         extends Shape[R]
-  final private[picazio] case class ZIOStreamColumn[R](content: Task[Stream[Throwable, Shape[R]]])                extends Shape[R]
   final private[picazio] case class StaticRow[R](content: Seq[Shape[R]])                                          extends Shape[R]
   final private[picazio] case class DynamicRow[R](content: Signal[Seq[Shape[R]]])                                 extends Shape[R]
   final private[picazio] case class Focused[R](inner: Shape[R])                                                   extends Shape[R]
@@ -48,6 +47,7 @@ object Shape {
   final private[picazio] case class OnInput[R, R1](action: String => ZIO[R1, Throwable, Unit], inner: Shape[R])   extends Shape[R & R1]
   final private[picazio] case class OnKeyPressed[R, R1](action: Int => ZIO[R1, Throwable, Unit], inner: Shape[R]) extends Shape[R & R1]
   final private[picazio] case class Eventual[R, R1](content: ZIO[R1, Throwable, Shape[R]])                        extends Shape[R & R1]
+  final private[picazio] case class Loading[R, R1](loading: Shape[R], eventual: Shape[R1])                        extends Shape[R & R1]
 
 }
 
@@ -83,6 +83,17 @@ sealed trait Shape[-R] {
    */
   final def reverse: Shape[R] = Shape.Reversed(this)
 
+  /**
+   * Show a shape while this eventual shape is loading.
+   */
+  def onLoading[R1](content: Shape[R1]): Shape[R & R1] =
+    this match {
+      case eventual: Shape.Eventual[?, ?] => Shape.Loading(content, eventual)
+      case _                              =>
+        println(s"Calling onLoading on a ${this.getClass.getSimpleName} is useless")
+        this
+    }
+
   final def provide(layer: ZLayer[Any, Throwable, R]): Shape[Any] = this match {
     case s @ Shape.StaticText(_)               => s
     case s @ Shape.Text(_)                     => s
@@ -94,7 +105,6 @@ sealed trait Shape[-R] {
     case s @ Shape.StaticColumn(content)       => s.copy(content.map(_.provide(layer)))
     case s @ Shape.DynamicColumn(content)      => s.copy(content.map(_.map(_.provide(layer))))
     case s @ Shape.StreamColumn(content)       => s.copy(content.map(_.provide(layer)))
-    case s @ Shape.ZIOStreamColumn(content)    => s.copy(content.map(_.map(_.provide(layer))))
     case s @ Shape.StaticRow(content)          => s.copy(content.map(_.provide(layer)))
     case s @ Shape.DynamicRow(content)         => s.copy(content.map(_.map(_.provide(layer))))
     case s @ Shape.Focused(inner)              => s.copy(inner.provide(layer))
@@ -105,6 +115,7 @@ sealed trait Shape[-R] {
     case s @ Shape.OnInput(action, inner)      => s.copy(action(_).provide(layer), inner.provide(layer))
     case s @ Shape.OnKeyPressed(action, inner) => s.copy(action(_).provide(layer), inner.provide(layer))
     case s @ Shape.Eventual(content)           => s.copy(content.provide(layer).map(_.provide(layer)))
+    case s @ Shape.Loading(content, inner)     => s.copy(content.provide(layer), inner.provide(layer))
   }
 
 }

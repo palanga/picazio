@@ -38,12 +38,12 @@ class EventualShapeTest extends WebInterpreterSpec with Matchers {
 
   testShape("a text of a zio of a signal is converted to an eventual signaled text") { render =>
 
-    def SignaledNumber(eventualSignaledText: Task[Signal[String]]) = Shape.text(eventualSignaledText)
+    def SignaledText(eventualSignaledText: Task[Signal[String]]) = Shape.text(eventualSignaledText)
 
     for {
       queue  <- Queue.sliding[String](1)
       stream  = ZStream.fromQueue(queue)
-      root   <- render(Shape.column(SignaledNumber(Signal.fromStream(stream))))
+      root   <- render(Shape.column(SignaledText(Signal.fromStream(stream))))
       _      <- debounce(root should have size 1)
       _      <- debounce(root.head.tag shouldBe "span")
       _      <- debounce(root.head.text shouldBe "loading...")
@@ -55,6 +55,25 @@ class EventualShapeTest extends WebInterpreterSpec with Matchers {
       _      <- queue.offer("todo bien")
       _      <- debounce
       result <- debounce(root.head.text shouldBe "todo bien")
+    } yield result
+
+  }
+
+  testShape("an eventual shape can have a custom loading element") { render =>
+
+    def EventualText(zioText: Task[String]) =
+      Shape.eventual(zioText.map(Shape.text))
+        .onLoading(Shape.text("loading"))
+
+    for {
+      finishLoading <- SubscriptionRef.make(false)
+      eventualText   = ZIO.suspendSucceed(finishLoading.changes.takeUntil(identity).runDrain.as("loaded"))
+      root          <- render(Shape.column(EventualText(eventualText)))
+      _             <- debounce(root.head.text shouldBe "loading")
+      _             <- finishLoading.set(true)
+      _             <- debounce
+      _             <- debounce
+      result        <- debounce(root.head.text shouldBe "loaded")
     } yield result
 
   }

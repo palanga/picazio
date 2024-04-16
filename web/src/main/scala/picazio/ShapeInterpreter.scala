@@ -75,13 +75,6 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           flexDirection.column,
         )
 
-      case ZIOStreamColumn(content) =>
-        div(
-          children.command <-- toLaminarCommandStream(content, asLaminarElement, CollectionCommand.Append.apply),
-          display.flex,
-          flexDirection.column,
-        )
-
       case StaticRow(content) =>
         div(
           content.map(asLaminarElement),
@@ -161,17 +154,14 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
       case OnInputFilter(filter, Styled(_, inner)) => asLaminarElement(OnInputFilter(filter, inner))
 
-      case Eventual(content) =>
-//        val loading = asLaminarElement(Shape.text("loading...")) // TODO
-        val loading       = span("loading...", display.none)
-        def loadingParent = loading.maybeParent.get // this has to be lazy
-        runtime.unsafe.runToFuture(
-          content.flatMap(shape =>
-            ZIO.attempt(ParentNode.replaceChild(loadingParent, loading, asLaminarElement(shape)))
-              .delay(0.second) // debounce to let the loading have a parent (tests fail otherwise)
-          )
+      case Eventual(content) => renderEventualAndReplaceLoading(content, span("loading...", display.none))
+
+      case Loading(content, Eventual(eventual)) => renderEventualAndReplaceLoading(eventual, asLaminarElement(content))
+
+      case Loading(_, inner) =>
+        throw new IllegalArgumentException(
+          s"Can't add an on loading shape to a non eventual shape: ${inner.getClass.getName}"
         )
-        loading
 
       case OnInput(_, inner) =>
         throw new IllegalArgumentException(
@@ -187,22 +177,48 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
   }
 
+  private def renderEventualAndReplaceLoading(
+    eventual: ZIO[Any, Throwable, Shape[Any]],
+    loading: ReactiveElement.Base,
+  ) = {
+    def loadingParent = loading.maybeParent.get // this has to be lazy
+    runtime.unsafe.runToFuture(
+      eventual.flatMap(shape =>
+        ZIO.attempt(ParentNode.replaceChild(loadingParent, loading, asLaminarElement(shape)))
+          .delay(0.second) // debounce to let the loading have a parent (tests fail otherwise)
+      )
+    )
+    loading
+  }
+
   @tailrec
   private def isColumn(inner: Shape[?]): Boolean = inner match {
-    case StaticColumn(_)         => true
-    case DynamicColumn(_)        => true
-    case StreamColumn(_)         => true
-    case ZIOStreamColumn(_)      => true
-    case StaticRow(_)            => false
-    case DynamicRow(_)           => false
-    case OnClick(_, inner)       => isColumn(inner)
-    case OnInput(_, inner)       => isColumn(inner)
-    case OnKeyPressed(_, inner)  => isColumn(inner)
-    case OnInputFilter(_, inner) => isColumn(inner)
-    case Focused(inner)          => isColumn(inner)
-    case Styled(_, inner)        => isColumn(inner)
-    case Reversed(inner)         => isColumn(inner)
-    case _                       => println("Calling isColumn on a non column or row shape has no sense"); false
+    case StaticText(_)             => invalid
+    case Text(_)                   => invalid
+    case TextInput(_)              => invalid
+    case SubscribedTextInput(_, _) => invalid
+    case SignaledTextInput(_, _)   => invalid
+    case Button(_)                 => invalid
+    case Background(_)             => invalid
+    case StaticColumn(_)           => true
+    case DynamicColumn(_)          => true
+    case StreamColumn(_)           => true
+    case StaticRow(_)              => false
+    case DynamicRow(_)             => false
+    case Focused(_)                => invalid
+    case Reversed(inner)           => isColumn(inner)
+    case OnInputFilter(_, _)       => invalid
+    case Styled(_, inner)          => isColumn(inner)
+    case OnClick(_, inner)         => isColumn(inner)
+    case OnInput(_, inner)         => isColumn(inner)
+    case OnKeyPressed(_, inner)    => isColumn(inner)
+    case Eventual(_)               => invalid
+    case Loading(_, _)             => invalid
+  }
+
+  private def invalid = {
+    println("Calling isColumn on a non column or row shape has no sense")
+    false
   }
 
   private def amendHtmlOrEcho(
