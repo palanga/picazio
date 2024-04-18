@@ -78,7 +78,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
             // TODO explore if the following shouldn't be a flatMap of a ZIO.attempt(commandBus.emit)
             .map(commandBus.emit)
             .runDrain
-            .ignoreLogged
+            .ignoreLoggedError
         )
         div(
           children.command <-- commandBus.events,
@@ -87,13 +87,13 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
         )
 
       case OnClick(task, inner) =>
-        val runOnClick = onClick --> { _ => runtime.unsafe.runToFuture(task.ignoreLogged) }
+        val runOnClick = onClick --> { _ => runtime.unsafe.runToFuture(task.ignoreLoggedError) }
         asLaminarElement(inner).amend(runOnClick)
 
       case OnInput(action, TextInput(_placeholder)) =>
         input(
           placeholder := _placeholder,
-          onInput.mapToValue --> { current => runtime.unsafe.runToFuture(action(current).ignoreLogged) },
+          onInput.mapToValue --> { current => runtime.unsafe.runToFuture(action(current).ignoreLoggedError) },
         )
 
       case OnInput(action, SubscribedTextInput(_placeholder, ref)) =>
@@ -102,7 +102,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           controlled(
             value <-- toLaminarSignal(ref.signal),
             onInput.mapToValue --> { current =>
-              runtime.unsafe.runToFuture(ref.set(current) <* action(current).ignoreLogged)
+              runtime.unsafe.runToFuture(ref.set(current) <* action(current).ignoreLoggedError)
             },
           ),
         )
@@ -112,10 +112,10 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
         def handleOnInput(current: String): Unit = {
           state.set(current)
-          runtime.unsafe.runToFuture(action(current).ignoreLogged)
+          runtime.unsafe.runToFuture(action(current).ignoreLoggedError)
         }
 
-        runtime.unsafe.runToFuture(signal.changes.map(state.set).runDrain.ignoreLogged)
+        runtime.unsafe.runToFuture(signal.changes.map(state.set).runDrain.ignoreLoggedError)
         input(
           placeholder := _placeholder,
           controlled(
@@ -125,7 +125,9 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
         )
 
       case OnKeyPressed(action, inner) =>
-        val runOnKeyPressed = onKeyDown --> { event => runtime.unsafe.runToFuture(action(event.keyCode).ignoreLogged) }
+        val runOnKeyPressed = onKeyDown --> { event =>
+          runtime.unsafe.runToFuture(action(event.keyCode).ignoreLoggedError)
+        }
         asLaminarElement(inner).amend(runOnKeyPressed)
 
       case OnInputFilter(filter, SubscribedTextInput(_placeholder, ref)) =>
@@ -133,10 +135,10 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
         def handleOnInput(current: String): Unit = {
           state.set(current)
-          runtime.unsafe.runToFuture(ref.set(current).ignoreLogged)
+          runtime.unsafe.runToFuture(ref.set(current).ignoreLoggedError)
         }
 
-        runtime.unsafe.runToFuture(ref.changes.filter(filter).map(state.set).runDrain.ignoreLogged)
+        runtime.unsafe.runToFuture(ref.changes.filter(filter).map(state.set).runDrain.ignoreLoggedError)
         input(
           placeholder := _placeholder,
           controlled(
@@ -190,7 +192,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
       eventual.flatMap(shape =>
         ZIO.attempt(ParentNode.replaceChild(loadingParent, loading, asLaminarElement(shape)))
           .delay(0.second) // debounce to let the loading have a parent (tests fail otherwise)
-      ).ignoreLogged
+      ).ignoreLoggedError
     )
     loading
   }
@@ -221,6 +223,17 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
   private def invalid = {
     println("Calling isColumn on a non column or row shape has no sense")
     false
+  }
+
+  implicit private[picazio] class LogOps(self: ZIO[Any, Throwable, ?]) {
+    def ignoreLoggedError: ZIO[Any, Nothing, Unit] =
+      self.foldCauseZIO(
+        cause =>
+          ZIO.logLevel(LogLevel.Error) {
+            ZIO.logCause("An error was silently ignored because it is not anticipated to be useful", cause)
+          },
+        _ => ZIO.unit,
+      )
   }
 
   private def amendHtmlOrEcho(
