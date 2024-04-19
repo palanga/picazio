@@ -49,6 +49,12 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           width := "fit-content",
         )
 
+      case Icon(icon) =>
+        span(
+          className("material-symbols-outlined"),
+          icon.toString,
+        )
+
       case Background(inner) => div(asLaminarElement(inner), minHeight.vh(100))
 
       case Reversed(inner) =>
@@ -205,6 +211,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
     case SubscribedTextInput(_, _)   => invalid
     case SignaledTextInput(_, _)     => invalid
     case Button(_)                   => invalid
+    case Icon(_)                     => invalid
     case Background(_)               => invalid
     case StaticArray(_, direction)   => direction.isColumn
     case SignaledArray(_, direction) => direction.isColumn

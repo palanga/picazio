@@ -20,6 +20,7 @@ trait ZIOWebApp {
 
   private def start(implicit unsafe: Unsafe) =
     for {
+      _            <- loadIcons.forkDaemon
       _            <- SplashScreen.print
       _            <- loadDOMContent
       mountingNode <- selectMountingNode
@@ -36,5 +37,12 @@ trait ZIOWebApp {
     ZIO
       .attempt(Option(dom.document.querySelector("#picazio-root")))
       .someOrFail(Error.MountingNodeNotFound)
+
+  private def loadIcons = ZIO.attempt {
+    val link = dom.document.createElement("link")
+    link.setAttribute("href", "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100")
+    link.setAttribute("rel", "stylesheet")
+    dom.document.body.appendChild(link)
+  }
 
 }

@@ -3,8 +3,6 @@ package examples.reactivity
 import picazio.*
 import zio.stream.*
 
-// TODO el text input se ve mal
-// TODO el text input se ve mal también si lo llamo sin signal
 object Main extends WebApp {
   override def root: Shape[Any] =
     Shape.eventual(
@@ -30,5 +28,4 @@ object Main extends WebApp {
         Shape.text(sum.map(value => s"d = $value")),
       )
     )
-
 }

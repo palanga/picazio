@@ -10,6 +10,8 @@ class RenderedElement(self: Element) extends Iterable[RenderedElement] {
 
   def tag: String = self.tagName.toLowerCase
 
+  def `class`: Seq[String] = self.classList.toList
+
   def text: String = self match {
     case input: Input => input.value
     case _            => self.innerText

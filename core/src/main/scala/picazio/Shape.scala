@@ -7,6 +7,7 @@ import zio.stream.*
 
 // TODO
 // * plantilla gitter 8
+// * los inputs se ven mal (mirar ejemplo de reactividad)
 // * que cambie de color el botón cuando lo apretás
 // * el botón en iOS tiene letra color azul
 // * la entrada de texto en iOS tiene borde redondeado
@@ -20,6 +21,7 @@ import zio.stream.*
 // * manejo de errores
 // * listas mutables atómicas reactivas
 // * ZIOWebApp ya no tiene sentido?
+// * mejorar el logging del servidor de desarrollo
 object Shape {
 
   def text(content: String): Shape[Any]                                                      = StaticText(content)
@@ -33,6 +35,7 @@ object Shape {
   def textInput(signal: Signal[String]): Shape[Any]                                          = SignaledTextInput("", signal)
   def textInput(placeholder: String, signal: Signal[String]): Shape[Any]                     = SignaledTextInput(placeholder, signal)
   def button(content: String): Shape[Any]                                                    = Button(content)
+  def icon(icon: picazio.Icon): Shape[Any]                                                   = Icon(icon)
   def background[R](content: Shape[R]): Shape[R]                                             = Background(content)
   def column[R](content: Shape[R]*): Shape[R]                                                = StaticArray(content, Direction.Column)
   def column[R](content: Signal[Seq[Shape[R]]]): Shape[R]                                    = SignaledArray(content, Direction.Column)
@@ -50,6 +53,7 @@ object Shape {
   final private[picazio] case class SubscribedTextInput(placeholder: String, ref: SubscriptionRef[String])        extends Shape[Any]
   final private[picazio] case class SignaledTextInput(placeholder: String, signal: Signal[String])                extends Shape[Any]
   final private[picazio] case class Button(content: String)                                                       extends Shape[Any]
+  final private[picazio] case class Icon(icon: picazio.Icon)                                                      extends Shape[Any]
   final private[picazio] case class Background[R](inner: Shape[R])                                                extends Shape[R]
   final private[picazio] case class StaticArray[R](shapes: Seq[Shape[R]], direction: Direction)                   extends Shape[R]
   final private[picazio] case class SignaledArray[R](shapes: Signal[Seq[Shape[R]]], direction: Direction)         extends Shape[R]
@@ -116,6 +120,7 @@ sealed trait Shape[-R] {
     case s @ Shape.SubscribedTextInput(_, _)   => s
     case s @ Shape.SignaledTextInput(_, _)     => s
     case s @ Shape.Button(_)                   => s
+    case s @ Shape.Icon(_)                     => s
     case s @ Shape.Background(inner)           => s.copy(inner.provide(layer))
     case s @ Shape.StaticArray(content, _)     => s.copy(content.map(_.provide(layer)))
     case s @ Shape.SignaledArray(content, _)   => s.copy(content.map(_.map(_.provide(layer))))

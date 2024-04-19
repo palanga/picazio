@@ -54,6 +54,11 @@ trait WebInterpreterSpec extends AsyncFunSuite {
       testTitle.setAttribute("style", """margin-top: 18; margin-bottom: 6""")
       document.getElementById(suiteClassName).appendChild(testTitle)
 
+      val link = document.createElement("link")
+      link.setAttribute("href", "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100")
+      link.setAttribute("rel", "stylesheet")
+      document.getElementById(suiteClassName).appendChild(link)
+
       val testRoot = document.createElement("dd")
       testRoot.setAttribute("id", testId(testName))
       testRoot.setAttribute("style", """display: flex; border: solid; border-width: 10; border-color: lightgray""")

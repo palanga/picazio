@@ -111,7 +111,7 @@ lazy val examples =
       publish / skip                  := true,
       Test / skip                     := true,
       scalaJSUseMainModuleInitializer := true,
-      Compile / mainClass             := Some("examples.reactivity.Main"),
+      Compile / mainClass             := Some("examples.icons.Main"),
       commonSettings,
     )
     .dependsOn(
