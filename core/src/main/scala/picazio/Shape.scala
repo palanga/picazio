@@ -105,7 +105,7 @@ sealed trait Shape[-R] {
   /**
    * Show a shape while this eventual shape is loading.
    */
-  def onLoading[R1](content: Shape[R1]): Shape[R & R1] =
+  final def onLoading[R1](content: Shape[R1]): Shape[R & R1] =
     this match {
       case eventual: Shape.Eventual[?, ?] => Shape.Loading(content, eventual)
       case _                              =>
@@ -113,7 +113,12 @@ sealed trait Shape[-R] {
         this
     }
 
-  final def provide(layer: ZLayer[Any, Throwable, R]): Shape[Any] = this match {
+  final def provide(layer: ZLayer[Any, Throwable, R]): Shape[Any] =
+    Shape.eventual(
+      ZIO.scopedWith(scope => layer.build(scope)).map(this.provideEnvironment)
+    )
+
+  private def provideEnvironment(env: ZEnvironment[R]): Shape[Any] = this match {
     case s @ Shape.StaticText(_)               => s
     case s @ Shape.Text(_)                     => s
     case s @ Shape.TextInput(_)                => s
@@ -121,19 +126,19 @@ sealed trait Shape[-R] {
     case s @ Shape.SignaledTextInput(_, _)     => s
     case s @ Shape.Button(_)                   => s
     case s @ Shape.Icon(_)                     => s
-    case s @ Shape.Background(inner)           => s.copy(inner.provide(layer))
-    case s @ Shape.StaticArray(content, _)     => s.copy(content.map(_.provide(layer)))
-    case s @ Shape.SignaledArray(content, _)   => s.copy(content.map(_.map(_.provide(layer))))
-    case s @ Shape.StreamedArray(content, _)   => s.copy(content.map(_.provide(layer)))
-    case s @ Shape.Focused(inner)              => s.copy(inner.provide(layer))
-    case s @ Shape.Reversed(inner)             => s.copy(inner.provide(layer))
-    case s @ Shape.OnInputFilter(_, inner)     => s.copy(inner = inner.provide(layer))
-    case s @ Shape.Styled(_, inner)            => s.copy(inner = inner.provide(layer))
-    case s @ Shape.OnClick(action, inner)      => s.copy(action.provide(layer), inner.provide(layer))
-    case s @ Shape.OnInput(action, inner)      => s.copy(action(_).provide(layer), inner.provide(layer))
-    case s @ Shape.OnKeyPressed(action, inner) => s.copy(action(_).provide(layer), inner.provide(layer))
-    case s @ Shape.Eventual(content)           => s.copy(content.provide(layer).map(_.provide(layer)))
-    case s @ Shape.Loading(content, inner)     => s.copy(content.provide(layer), inner.provide(layer))
+    case s @ Shape.Background(inner)           => s.copy(inner.provideEnvironment(env))
+    case s @ Shape.StaticArray(content, _)     => s.copy(content.map(_.provideEnvironment(env)))
+    case s @ Shape.SignaledArray(content, _)   => s.copy(content.map(_.map(_.provideEnvironment(env))))
+    case s @ Shape.StreamedArray(content, _)   => s.copy(content.map(_.provideEnvironment(env)))
+    case s @ Shape.Focused(inner)              => s.copy(inner.provideEnvironment(env))
+    case s @ Shape.Reversed(inner)             => s.copy(inner.provideEnvironment(env))
+    case s @ Shape.OnInputFilter(_, inner)     => s.copy(inner = inner.provideEnvironment(env))
+    case s @ Shape.Styled(_, inner)            => s.copy(inner = inner.provideEnvironment(env))
+    case s @ Shape.OnClick(action, inner)      => s.copy(action.provideEnvironment(env), inner.provideEnvironment(env))
+    case s @ Shape.OnInput(action, inner)      => s.copy(action(_).provideEnvironment(env), inner.provideEnvironment(env))
+    case s @ Shape.OnKeyPressed(action, inner) => s.copy(action(_).provideEnvironment(env), inner.provideEnvironment(env))
+    case s @ Shape.Eventual(content)           => s.copy(content.provideEnvironment(env).map(_.provideEnvironment(env)))
+    case s @ Shape.Loading(content, inner)     => s.copy(content.provideEnvironment(env), inner.provideEnvironment(env))
   }
 
 }
