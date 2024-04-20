@@ -34,6 +34,9 @@ final class StyleOps[R](val self: Shape[R]) extends AnyVal {
 
   def spaceBetween: Shape[R] = addStyle(Style.JustifyContent(Justification.spaceBetween))
 
+  def height(size: Size): Shape[R] = addStyles(Style.FixHeight(size))
+  def width(size: Size): Shape[R]  = addStyles(Style.FixWidth(size))
+
   def fullWidth: Shape[R] = addStyle(Style.Width(100))
 
   def cursor(cursor: Cursor): Shape[R] = addStyle(Style.CursorStyle(cursor))

@@ -6,9 +6,11 @@ import com.raquo.laminar.api.L.{ button as laminarButton, * }
 import com.raquo.laminar.nodes.*
 import org.scalajs.dom.{ console, Element }
 import picazio.Shape.*
+import picazio.ops.LogOps
 import picazio.signal.toLaminarSignal
 import picazio.theme.Theme
 import zio.*
+import zio.stream.*
 
 import scala.annotation.tailrec
 import scala.util.chaining.scalaUtilChainingOps
@@ -161,9 +163,9 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
       case OnInputFilter(filter, Styled(_, inner)) => asLaminarElement(OnInputFilter(filter, inner))
 
-      case Eventual(content) => renderEventualAndReplaceLoading(content, span("loading...", display.none))
-
-      case Loading(content, Eventual(eventual)) => renderEventualAndReplaceLoading(eventual, asLaminarElement(content))
+      case Variable(_)             => reactiveShapeAsLaminarElement(shape)
+      case Eventual(_)             => reactiveShapeAsLaminarElement(shape)
+      case Loading(_, Eventual(_)) => reactiveShapeAsLaminarElement(shape)
 
       case Loading(_, inner) =>
         throw new IllegalArgumentException(
@@ -189,19 +191,32 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
     case Direction.Row    => flexDirection.row
   }
 
-  private def renderEventualAndReplaceLoading(
-    eventual: ZIO[Any, Throwable, Shape[Any]],
-    loading: ReactiveElement.Base,
-  ) = {
-    def loadingParent = loading.maybeParent.get // this has to be lazy
+  private def reactiveShapeAsLaminarElement(shape: Shape[Any]) = {
+    val dummy: ReactiveElement.Base = span("dummy", display.none)
+    lazy val parent                 = dummy.maybeParent.get
     runtime.unsafe.runToFuture(
-      eventual.flatMap(shape =>
-        ZIO.attempt(ParentNode.replaceChild(loadingParent, loading, asLaminarElement(shape)))
-          .delay(0.second) // debounce to let the loading have a parent (tests fail otherwise)
-      ).ignoreLoggedError
+      shapeAsShapeStream(shape)
+        .map(asLaminarElement)
+        .runFoldZIO(dummy)(replaceElement(parent))
+        .ignoreLoggedError("Error replacing child")
     )
-    loading
+    dummy
   }
+
+  private def shapeAsShapeStream(shape: Shape[Any]): Stream[Throwable, Shape[Any]] = shape match {
+    case Shape.Eventual(task)             => ZStream.fromZIO(task.map(shapeAsShapeStream)).flatten
+    case Shape.Variable(signal)           => signal.changes.flatMap(shapeAsShapeStream)
+    case Shape.Loading(loading, eventual) => ZStream.succeed(loading) ++ shapeAsShapeStream(eventual)
+    case _                                => ZStream.succeed(shape)
+  }
+
+  private def replaceElement(
+    parent: => ParentNode.Base
+  )(currentElement: ReactiveElement.Base, newElement: ReactiveElement.Base) =
+    ZIO.succeed {
+      ParentNode.replaceChild(parent, currentElement, newElement)
+      newElement
+    }
 
   @tailrec
   private def isColumn(inner: Shape[?]): Boolean = inner match {
@@ -225,22 +240,12 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
     case OnKeyPressed(_, inner)      => isColumn(inner)
     case Eventual(_)                 => invalid
     case Loading(_, _)               => invalid
+    case Variable(_)                 => invalid
   }
 
   private def invalid = {
     println("Calling isColumn on a non column or row shape has no sense")
     false
-  }
-
-  implicit private[picazio] class LogOps(self: ZIO[Any, Throwable, ?]) {
-    def ignoreLoggedError: ZIO[Any, Nothing, Unit] =
-      self.foldCauseZIO(
-        cause =>
-          ZIO.logLevel(LogLevel.Error) {
-            ZIO.logCause("An error was silently ignored because it is not anticipated to be useful", cause)
-          },
-        _ => ZIO.unit,
-      )
   }
 
   private def amendHtmlOrEcho(

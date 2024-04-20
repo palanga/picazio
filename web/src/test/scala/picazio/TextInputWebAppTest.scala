@@ -92,10 +92,10 @@ class TextInputWebAppTest extends WebInterpreterSpec with Matchers {
       Shape.column(
         Shape
           .textInput("centimeters", centimetersRef.signal.map(_.toString))
-          .onInput(handleCentimetersInput),
+          .onInput(handleCentimetersInput(_).ignore),
         Shape
           .textInput("inches", inchesRef.signal.map(_.toString))
-          .onInput(handleInchesInput),
+          .onInput(handleInchesInput(_).ignore),
       )
     }
 

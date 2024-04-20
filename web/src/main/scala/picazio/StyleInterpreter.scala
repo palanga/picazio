@@ -5,6 +5,7 @@ import com.raquo.laminar.nodes.*
 import com.raquo.laminar.nodes.ReactiveHtmlElement.Base
 import org.scalajs.dom.Element
 import picazio.Shape.*
+import picazio.signal.toLaminarSignal
 import picazio.style.*
 import picazio.style.Style.*
 import picazio.theme.*
@@ -70,9 +71,28 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
       case PaddingStart(size)  => Seq(paddingLeft := (size * sizeMultiplier).toString + "px")
       case PaddingEnd(size)    => Seq(paddingRight := (size * sizeMultiplier).toString + "px")
 
-      case SelfAlignment(alignment) => Seq(alignSelf := alignment.toString)
+      case SelfAlignment(alignment) =>
+        shape match {
+          case Styled(_, StaticText(_)) =>
+            Seq(
+              textAlign    := alignment.toString,
+              alignContent := alignment.toString,
+              flexShrink(0),
+            )
+          case Styled(_, Text(_))       =>
+            Seq(
+              textAlign    := alignment.toString,
+              alignContent := alignment.toString,
+              flexShrink(0),
+            )
+          case _                        =>
+            Seq(alignSelf := alignment.toString)
+        }
 
       case Width(percentage) => Seq(width.percent(percentage))
+
+      case FixHeight(size) => Seq(height.px((size * sizeMultiplier).self.toInt))
+      case FixWidth(size)  => Seq(width.px((size * sizeMultiplier).self.toInt))
 
       case JustifyContent(justification) => Seq(justifyContent := justification.toString)
 
@@ -116,7 +136,7 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
         }
 
       case DynamicPaddingTop(size) =>
-        Seq(paddingTop <-- signal.toLaminarSignal(size.map(_ * sizeMultiplier).map(_.toString)))
+        Seq(paddingTop <-- toLaminarSignal(size.map(_ * sizeMultiplier).map(_.toString)))
     }
   }
 

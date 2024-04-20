@@ -20,6 +20,9 @@ private[picazio] object Style {
 
   case class Width(percentage: Int) extends Style
 
+  case class FixHeight(size: Size) extends Style
+  case class FixWidth(size: Size)  extends Style
+
   case class JustifyContent(justification: Justification) extends Style
 
   case class CursorStyle(cursor: Cursor) extends Style

@@ -9,4 +9,5 @@ object Icon {
   val flag     = new Icon("personal_places")
   val mine     = new Icon("explosion")
   val question = new Icon("question_mark")
+  val box      = new Icon("check_box_outline_blank")
 }
