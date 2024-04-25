@@ -55,7 +55,7 @@ class StreamWebAppTest extends WebInterpreterSpec with Matchers {
                          root should have size 1
                          root should have size 1
                          root.head.tag shouldBe "span"
-                         root.head.text shouldBe "loading..."
+                         root.head.text shouldBe "dummy"
                          root.head.styles should contain("display" -> "none")
                        }
       _             <- finishLoading.set(true)

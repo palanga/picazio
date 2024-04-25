@@ -23,7 +23,7 @@ class EventualShapeTest extends WebInterpreterSpec with Matchers {
       _      <- debounce(root.tag shouldBe "div")
       _      <- debounce(root should have size 1)
       _      <- debounce(root.head.tag shouldBe "span")
-      _      <- debounce(root.head.text shouldBe "loading...")
+      _      <- debounce(root.head.text shouldBe "dummy")
       _      <- debounce(root.head.styles should contain("display" -> "none"))
       _      <- queue.offer(107f)
       _      <- debounce
@@ -46,7 +46,7 @@ class EventualShapeTest extends WebInterpreterSpec with Matchers {
       root   <- render(Shape.column(SignaledText(Signal.fromStream(stream))))
       _      <- debounce(root should have size 1)
       _      <- debounce(root.head.tag shouldBe "span")
-      _      <- debounce(root.head.text shouldBe "loading...")
+      _      <- debounce(root.head.text shouldBe "dummy")
       _      <- debounce(root.head.styles should contain("display" -> "none"))
       _      <- queue.offer("que tal")
       _      <- debounce
