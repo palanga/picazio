@@ -3,6 +3,7 @@ package picazio
 import com.raquo.airstream.eventbus.EventBus
 import com.raquo.laminar.CollectionCommand
 import com.raquo.laminar.api.L.{ button as laminarButton, * }
+import com.raquo.laminar.defs.attrs.HtmlAttrs
 import com.raquo.laminar.nodes.*
 import org.scalajs.dom.{ console, Element }
 import picazio.Shape.*
@@ -15,7 +16,7 @@ import zio.stream.*
 import scala.annotation.tailrec
 import scala.util.chaining.scalaUtilChainingOps
 
-private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe: Unsafe) {
+private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe: Unsafe) extends HtmlAttrs {
 
   private val styleInterpreter = new StyleInterpreter()
 
@@ -58,6 +59,13 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
         )
 
       case Image(source) => img(src(source))
+
+      case Video(source) =>
+        videoTag(
+          boolAsTrueFalseHtmlAttr("controls")(true),
+          stringHtmlAttr("preload")("auto"),
+          src(source),
+        )
 
       case Background(inner) => div(asLaminarElement(inner), minHeight.vh(100))
 
@@ -243,6 +251,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
     case Button(_)                   => invalid
     case Icon(_)                     => invalid
     case Image(_)                    => invalid
+    case Video(_)                    => invalid
     case Background(_)               => invalid
     case StaticArray(_, direction)   => direction.isColumn
     case SignaledArray(_, direction) => direction.isColumn

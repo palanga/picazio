@@ -19,6 +19,10 @@ class RenderedElement(self: Element) extends Iterable[RenderedElement] {
 
   def src: String = self.getAttribute("src")
 
+  def controls: String = self.getAttribute("controls")
+
+  def preload: String = self.getAttribute("preload")
+
   def write(text: String): Task[Unit] =
     ZIO.attempt {
       self.asInstanceOf[Input].value = text

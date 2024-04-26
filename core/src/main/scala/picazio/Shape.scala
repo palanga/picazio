@@ -6,8 +6,6 @@ import zio.*
 import zio.stream.*
 
 // TODO
-// * imágenes
-// * videos
 // * enrutador y navegación
 // * flotantes
 // * plantilla gitter 8
@@ -43,6 +41,7 @@ object Shape {
   def icon(icon: picazio.Icon): Shape[Any]                                                                  = Icon(icon)
   def image(source: String): Shape[Any]                                                                     = Image(source)
   def image[R](source: ZIO[R, Throwable, String]): Shape[R]                                                 = Eventual(source.map(image))
+  def video(source: String): Shape[Any]                                                                     = Video(source)
   def background[R](content: Shape[R]): Shape[R]                                                            = Background(content)
   def column[R](content: Shape[R]*): Shape[R]                                                               = StaticArray(content, Direction.Column)
   def column[R](content: Iterable[Shape[R]]): Shape[R]                                                      = StaticArray(content.toSeq, Direction.Column)
@@ -70,6 +69,7 @@ object Shape {
   final private[picazio] case class Button(content: String)                                                       extends Shape[Any]
   final private[picazio] case class Icon(icon: picazio.Icon)                                                      extends Shape[Any]
   final private[picazio] case class Image(source: String)                                                         extends Shape[Any]
+  final private[picazio] case class Video(source: String)                                                         extends Shape[Any]
   final private[picazio] case class Background[R](inner: Shape[R])                                                extends Shape[R]
   final private[picazio] case class StaticArray[R](shapes: Seq[Shape[R]], direction: Direction)                   extends Shape[R]
   final private[picazio] case class SignaledArray[R](shapes: Signal[Seq[Shape[R]]], direction: Direction)         extends Shape[R]
@@ -85,6 +85,7 @@ object Shape {
   final private[picazio] case class Eventual[R, R1](content: ZIO[R1, Throwable, Shape[R]])                        extends Shape[R & R1]
   final private[picazio] case class Loading[R, R1](loading: Shape[R], eventual: Shape[R1])                        extends Shape[R & R1]
   final private[picazio] case class Variable[R](shapeSignal: Signal[Shape[R]])                                    extends Shape[R]
+
 }
 
 sealed trait Shape[-R] {
@@ -156,6 +157,7 @@ sealed trait Shape[-R] {
     case s @ Shape.Button(_)                   => s
     case s @ Shape.Icon(_)                     => s
     case s @ Shape.Image(_)                    => s
+    case s @ Shape.Video(_)                    => s
     case s @ Shape.Background(inner)           => s.copy(inner.provideEnvironment(env))
     case s @ Shape.StaticArray(content, _)     => s.copy(content.map(_.provideEnvironment(env)))
     case s @ Shape.SignaledArray(content, _)   => s.copy(content.map(_.map(_.provideEnvironment(env))))
