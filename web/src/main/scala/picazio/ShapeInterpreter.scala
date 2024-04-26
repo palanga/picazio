@@ -225,12 +225,11 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
   private def replaceElement(
     parent: => ParentNode.Base
-  )(currentElement: ReactiveElement.Base, newElement: ReactiveElement.Base) = {
+  )(currentElement: ReactiveElement.Base, newElement: ReactiveElement.Base) =
     ZIO.succeed {
       ParentNode.replaceChild(parent, currentElement, newElement)
       newElement
     }
-  }
 
   @tailrec
   private def isColumn(inner: Shape[?]): Boolean = inner match {
