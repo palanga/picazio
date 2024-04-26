@@ -23,7 +23,7 @@ object Main extends WebApp {
   private def medium = Shape.button("MEDIUM").onClick(Board.init(Difficulty.Medium))
   private def hard   = Shape.button("HARD").onClick(Board.init(Difficulty.Hard))
 
-  private def board = Shape.gridWithZIO(Board.dimensions)(cell).refreshOn(Board.refreshTrigger)
+  private def board = Shape.gridWith(Board.dimensions)(cell).refreshOn(Board.resets)
 
   private def cell(column: Int, row: Int) = Shape.variableWith(Board.cellAt(Coordinate.of(column, row))) {
     case Cell.Untouched           => Shape.icon(Icon.box).onClick(Board.stepOn(Coordinate.of(column, row)))

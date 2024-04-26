@@ -94,6 +94,19 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           asFlexDirection(direction),
         )
 
+      case Grid(matrix) =>
+        div(
+          display.flex,
+          flexDirection.column,
+          matrix.map(row =>
+            div(
+              display.flex,
+              flexDirection.row,
+              row.map(asLaminarElement),
+            )
+          ),
+        )
+
       case OnClick(task, inner) =>
         val runOnClick = onClick --> { _ => runtime.unsafe.runToFuture(task.ignoreLoggedError) }
         asLaminarElement(inner).amend(runOnClick)
@@ -212,11 +225,12 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
   private def replaceElement(
     parent: => ParentNode.Base
-  )(currentElement: ReactiveElement.Base, newElement: ReactiveElement.Base) =
+  )(currentElement: ReactiveElement.Base, newElement: ReactiveElement.Base) = {
     ZIO.succeed {
       ParentNode.replaceChild(parent, currentElement, newElement)
       newElement
     }
+  }
 
   @tailrec
   private def isColumn(inner: Shape[?]): Boolean = inner match {
@@ -231,6 +245,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
     case StaticArray(_, direction)   => direction.isColumn
     case SignaledArray(_, direction) => direction.isColumn
     case StreamedArray(_, direction) => direction.isColumn
+    case Grid(_)                     => invalid // TODO by now
     case Focused(_)                  => invalid
     case Reversed(inner)             => isColumn(inner)
     case OnInputFilter(_, _)         => invalid
@@ -249,8 +264,8 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
   }
 
   private def amendHtmlOrEcho(
-    element: ReactiveElement[Element]
-  )(modifier: Modifier[ReactiveHtmlElement.Base]): ReactiveElement[Element] =
+    element: ReactiveElement.Base
+  )(modifier: Modifier[ReactiveHtmlElement.Base]): ReactiveElement.Base =
     element match {
       case html: ReactiveHtmlElement[?] => html.amend(modifier)
       case svg: ReactiveSvgElement[?]   =>

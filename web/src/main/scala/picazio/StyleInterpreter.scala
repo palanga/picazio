@@ -50,6 +50,7 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
       case _: StaticArray[?]      => ArrayStyles.default
       case _: SignaledArray[?]    => ArrayStyles.default
       case _: StreamedArray[?]    => ArrayStyles.default
+      case _: Grid[?]             => ArrayStyles.default
       case _: Background[?]       => BackgroundStyles.default
       case _: OnClick[?, ?]       => OnClickStyles.default
       case Styled(styles, _)      => styles
@@ -141,8 +142,8 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
   }
 
   private def amendStyles(
-    element: ReactiveElement[Element]
-  )(styleModifiers: Seq[Modifier[Base]]): ReactiveElement[Element] =
+    element: ReactiveElement.Base
+  )(styleModifiers: Seq[Modifier[Base]]): ReactiveElement.Base =
     element match {
       case html: ReactiveHtmlElement[?] => html.amend(styleModifiers)
       case svg: ReactiveSvgElement[?]   => svg

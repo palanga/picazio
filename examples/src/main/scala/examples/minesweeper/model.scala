@@ -10,7 +10,7 @@ object model {
     def cellAt(coordinate: Coordinate): Task[Signal[Cell]]
     def dimensions: Task[(Int, Int)]
     def stepOn(coordinate: Coordinate): Task[Unit]
-    def refreshTrigger: Signal[Unit]
+    def resets: Signal[Unit]
   }
 
   sealed abstract class Difficulty(val columns: Int, val rows: Int, val mines: Int)
@@ -66,7 +66,7 @@ object model {
     def cellAt(coordinate: Coordinate) = ZIO.serviceWithZIO[Board](_.cellAt(coordinate))
     def dimensions                     = ZIO.serviceWithZIO[Board](_.dimensions)
     def stepOn(coordinate: Coordinate) = ZIO.serviceWithZIO[Board](_.stepOn(coordinate))
-    def refreshTrigger                 = ZIO.serviceWith[Board](_.refreshTrigger)
+    def resets                         = ZIO.serviceWith[Board](_.resets)
   }
 
 }
