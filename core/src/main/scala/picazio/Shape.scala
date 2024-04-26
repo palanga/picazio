@@ -6,21 +6,27 @@ import zio.*
 import zio.stream.*
 
 // TODO
-// * plantilla gitter 8
-// * los inputs se ven mal (mirar ejemplo de reactividad)
-// * que cambie de color el botón cuando lo apretás
-// * el botón en iOS tiene letra color azul
-// * la entrada de texto en iOS tiene borde redondeado
-// * aprender de SubscriptionRef.changes como usan ZStream.unwrapScoped y aplicarlo en Signal.fromStream y los ejemplos
-// * enrutador y navegación
-// * flotantes
 // * imágenes
 // * videos
+// * enrutador y navegación
+// * flotantes
+// * plantilla gitter 8
+// * que cambie de color el botón cuando lo apretás
 // * surface (material design)
 // * manejo de errores
 // * listas mutables atómicas reactivas
-// * ZIOWebApp ya no tiene sentido?
+// * provide macro
+// * mejorar el rendimiento de las grillas
+// * animaciones
+// * que los styles se importen con picazio.* asi no hace falta importar aparte con picazio.styles.*
+// BUGS
+// * los inputs se ven mal (mirar ejemplo de reactividad)
+// * el botón en iOS tiene letra color azul
+// * la entrada de texto en iOS tiene borde redondeado
 // * mejorar el logging del servidor de desarrollo
+// NAH
+// * aprender de SubscriptionRef.changes como usan ZStream.unwrapScoped y aplicarlo en Signal.fromStream y los ejemplos
+// * ZIOWebApp ya no tiene sentido?
 object Shape {
 
   def text(content: String): Shape[Any]                                                                     = StaticText(content)
@@ -35,6 +41,8 @@ object Shape {
   def textInput(placeholder: String, signal: Signal[String]): Shape[Any]                                    = SignaledTextInput(placeholder, signal)
   def button(content: String): Shape[Any]                                                                   = Button(content)
   def icon(icon: picazio.Icon): Shape[Any]                                                                  = Icon(icon)
+  def image(source: String): Shape[Any]                                                                     = Image(source)
+  def image[R](source: ZIO[R, Throwable, String]): Shape[R]                                                 = Eventual(source.map(image))
   def background[R](content: Shape[R]): Shape[R]                                                            = Background(content)
   def column[R](content: Shape[R]*): Shape[R]                                                               = StaticArray(content, Direction.Column)
   def column[R](content: Iterable[Shape[R]]): Shape[R]                                                      = StaticArray(content.toSeq, Direction.Column)
@@ -61,6 +69,7 @@ object Shape {
   final private[picazio] case class SignaledTextInput(placeholder: String, signal: Signal[String])                extends Shape[Any]
   final private[picazio] case class Button(content: String)                                                       extends Shape[Any]
   final private[picazio] case class Icon(icon: picazio.Icon)                                                      extends Shape[Any]
+  final private[picazio] case class Image(source: String)                                                         extends Shape[Any]
   final private[picazio] case class Background[R](inner: Shape[R])                                                extends Shape[R]
   final private[picazio] case class StaticArray[R](shapes: Seq[Shape[R]], direction: Direction)                   extends Shape[R]
   final private[picazio] case class SignaledArray[R](shapes: Signal[Seq[Shape[R]]], direction: Direction)         extends Shape[R]
@@ -76,7 +85,6 @@ object Shape {
   final private[picazio] case class Eventual[R, R1](content: ZIO[R1, Throwable, Shape[R]])                        extends Shape[R & R1]
   final private[picazio] case class Loading[R, R1](loading: Shape[R], eventual: Shape[R1])                        extends Shape[R & R1]
   final private[picazio] case class Variable[R](shapeSignal: Signal[Shape[R]])                                    extends Shape[R]
-
 }
 
 sealed trait Shape[-R] {
@@ -147,6 +155,7 @@ sealed trait Shape[-R] {
     case s @ Shape.SignaledTextInput(_, _)     => s
     case s @ Shape.Button(_)                   => s
     case s @ Shape.Icon(_)                     => s
+    case s @ Shape.Image(_)                    => s
     case s @ Shape.Background(inner)           => s.copy(inner.provideEnvironment(env))
     case s @ Shape.StaticArray(content, _)     => s.copy(content.map(_.provideEnvironment(env)))
     case s @ Shape.SignaledArray(content, _)   => s.copy(content.map(_.map(_.provideEnvironment(env))))

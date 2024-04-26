@@ -17,6 +17,8 @@ class RenderedElement(self: Element) extends Iterable[RenderedElement] {
     case _            => self.innerText
   }
 
+  def src: String = self.getAttribute("src")
+
   def write(text: String): Task[Unit] =
     ZIO.attempt {
       self.asInstanceOf[Input].value = text
