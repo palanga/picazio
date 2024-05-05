@@ -16,9 +16,9 @@ object model {
   sealed abstract class Difficulty(val columns: Int, val rows: Int, val mines: Int)
 
   object Difficulty {
-    final case object Easy   extends Difficulty(9, 9, 10)
-    final case object Medium extends Difficulty(16, 16, 40)
-    final case object Hard   extends Difficulty(30, 16, 99)
+    case object Easy   extends Difficulty(9, 9, 10)
+    case object Medium extends Difficulty(16, 16, 40)
+    case object Hard   extends Difficulty(30, 16, 99)
   }
 
   sealed trait Cell

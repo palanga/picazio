@@ -8,15 +8,15 @@ import zio.stream.*
 // TODO
 // * enrutador y navegación
 // * flotantes
-// * plantilla gitter 8
+// * animaciones
 // * que cambie de color el botón cuando lo apretás
 // * surface (material design)
 // * manejo de errores
+// * que los styles se importen con picazio.* asi no hace falta importar aparte con picazio.styles.*
+// * plantilla gitter 8
 // * listas mutables atómicas reactivas
 // * provide macro
 // * mejorar el rendimiento de las grillas
-// * animaciones
-// * que los styles se importen con picazio.* asi no hace falta importar aparte con picazio.styles.*
 // BUGS
 // * los inputs se ven mal (mirar ejemplo de reactividad)
 // * el botón en iOS tiene letra color azul

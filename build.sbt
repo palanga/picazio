@@ -211,6 +211,6 @@ val scala3Options = Seq(
 )
 
 val scala2Options = Seq(
-  "-Xsource:3",
+  "-Xsource:3-cross",
   "-Wconf:msg=package object inheritance is deprecated:info-summary",
 )
