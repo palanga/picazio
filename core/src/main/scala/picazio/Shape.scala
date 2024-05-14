@@ -27,6 +27,7 @@ import zio.stream.*
 // * ZIOWebApp ya no tiene sentido?
 object Shape {
 
+  def empty: Shape[Any]                                                                                     = Shape.Empty
   def text(content: String): Shape[Any]                                                                     = StaticText(content)
   def text(content: Signal[String]): Shape[Any]                                                             = Text(content)
   def text[R](content: ZIO[R, Throwable, String]): Shape[R]                                                 = Eventual(content.map(StaticText.apply))
@@ -61,6 +62,7 @@ object Shape {
   def gridWith[R](columns: Int, rows: Int)(f: (Int, Int) => Shape[R]): Shape[R]                             = Grid(Array.tabulate(rows, columns)((row, column) => f(column, row)))
   def gridWith[R, R1](dimensions: ZIO[R1, Throwable, (Int, Int)])(f: (Int, Int) => Shape[R]): Shape[R & R1] = eventualWith(dimensions) { case (column, row) => gridWith(column, row)(f) }
 
+  final private[picazio] case object Empty                                                                        extends Shape[Any]
   final private[picazio] case class StaticText(content: String)                                                   extends Shape[Any]
   final private[picazio] case class Text(content: Signal[String])                                                 extends Shape[Any]
   final private[picazio] case class TextInput(placeholder: String)                                                extends Shape[Any]
@@ -85,6 +87,7 @@ object Shape {
   final private[picazio] case class Eventual[R, R1](content: ZIO[R1, Throwable, Shape[R]])                        extends Shape[R & R1]
   final private[picazio] case class Loading[R, R1](loading: Shape[R], eventual: Shape[R1])                        extends Shape[R & R1]
   final private[picazio] case class Variable[R](shapeSignal: Signal[Shape[R]])                                    extends Shape[R]
+  final private[picazio] case class Conditional[R](showFlag: Signal[Boolean], inner: Shape[R])                    extends Shape[R]
 
 }
 
@@ -143,12 +146,35 @@ sealed trait Shape[-R] {
   final def refreshOn[R1](refreshTrigger: ZIO[R1, Throwable, Signal[Any]]): Shape[R & R1] =
     Shape.eventualWith(refreshTrigger)(refreshOn)
 
+  /**
+   * Show a shape based on a signal.
+   */
+  final def showWhen(showFlag: Signal[Boolean]): Shape[R] = Shape.Conditional(showFlag, this)
+
+  /**
+   * Show a shape based on a signal.
+   */
+  final def showWhen[R1](showFlag: ZIO[R1, Throwable, Signal[Boolean]]): Shape[R & R1] =
+    Shape.eventualWith(showFlag)(showWhen)
+
+  /**
+   * Hide a shape based on a signal.
+   */
+  final def hideWhen(showFlag: Signal[Boolean]): Shape[R] = showWhen(showFlag.map(!_))
+
+  /**
+   * Hide a shape based on a signal.
+   */
+  final def hideWhen[R1](showFlag: ZIO[R1, Throwable, Signal[Boolean]]): Shape[R & R1] =
+    showWhen(showFlag.map(_.map(!_)))
+
   final def provide(layer: ZLayer[Any, Throwable, R]): Shape[Any] =
     Shape.eventual(
       ZIO.scopedWith(scope => layer.build(scope)).map(this.provideEnvironment)
     )
 
   private def provideEnvironment(env: ZEnvironment[R]): Shape[Any] = this match {
+    case Shape.Empty                           => Shape.Empty
     case s @ Shape.StaticText(_)               => s
     case s @ Shape.Text(_)                     => s
     case s @ Shape.TextInput(_)                => s
@@ -173,6 +199,7 @@ sealed trait Shape[-R] {
     case s @ Shape.Eventual(content)           => s.copy(content.provideEnvironment(env).map(_.provideEnvironment(env)))
     case s @ Shape.Loading(content, inner)     => s.copy(content.provideEnvironment(env), inner.provideEnvironment(env))
     case s @ Shape.Variable(content)           => s.copy(content.map(_.provideEnvironment(env)))
+    case s @ Shape.Conditional(_, inner)       => s.copy(inner = inner.provideEnvironment(env))
   }
 
 }

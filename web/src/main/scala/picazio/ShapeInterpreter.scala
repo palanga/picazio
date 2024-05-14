@@ -23,9 +23,13 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
   private[picazio] def asLaminarElement(shape: Shape[Any]): ReactiveElement[Element] =
     convertToLaminarReactiveElement(shape) pipe styleInterpreter.applyStyles(shape)
 
+  private val empty = span(display.none)
+
   @tailrec
   private def convertToLaminarReactiveElement(shape: Shape[Any]): ReactiveElement[Element] = {
     shape match {
+
+      case Empty => empty
 
       case StaticText(content) => span(content)
       case Text(content)       => span(child.text <-- toLaminarSignal(content))
@@ -189,6 +193,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
       case Variable(_)             => reactiveShapeAsLaminarElement(shape)
       case Eventual(_)             => reactiveShapeAsLaminarElement(shape)
       case Loading(_, Eventual(_)) => reactiveShapeAsLaminarElement(shape)
+      case Conditional(_, _)       => reactiveShapeAsLaminarElement(shape)
 
       case Loading(_, inner) =>
         throw new IllegalArgumentException(
@@ -227,10 +232,12 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
   }
 
   private def shapeAsShapeStream(shape: Shape[Any]): Stream[Throwable, Shape[Any]] = shape match {
-    case Shape.Eventual(task)             => ZStream.fromZIO(task.map(shapeAsShapeStream)).flatten
-    case Shape.Variable(signal)           => signal.changes.flatMap(shapeAsShapeStream)
-    case Shape.Loading(loading, eventual) => ZStream.succeed(loading) ++ shapeAsShapeStream(eventual)
-    case _                                => ZStream.succeed(shape)
+    case Shape.Eventual(task)                     => ZStream.fromZIO(task.map(shapeAsShapeStream)).flatten
+    case Shape.Variable(signal)                   => signal.changes.flatMap(shapeAsShapeStream)
+    case Shape.Loading(loading, eventual)         => ZStream.succeed(loading) ++ shapeAsShapeStream(eventual)
+    case Shape.Conditional(showFlag, conditional) =>
+      showFlag.changes.flatMap(if (_) shapeAsShapeStream(conditional) else ZStream.succeed(Shape.empty))
+    case _                                        => ZStream.succeed(shape)
   }
 
   private def replaceElement(
@@ -243,6 +250,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
   @tailrec
   private def isColumn(inner: Shape[?]): Boolean = inner match {
+    case Empty                       => invalid
     case StaticText(_)               => invalid
     case Text(_)                     => invalid
     case TextInput(_)                => invalid
@@ -267,6 +275,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
     case Eventual(_)                 => invalid
     case Loading(_, _)               => invalid
     case Variable(_)                 => invalid
+    case Conditional(_, _)           => invalid
   }
 
   private def invalid = {
