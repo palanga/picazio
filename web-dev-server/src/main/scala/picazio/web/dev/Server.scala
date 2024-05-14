@@ -45,11 +45,7 @@ object Server {
   private def routes: Routes[ProjectManager, Throwable] =
     Routes(
       // index html
-      Method.GET / "" -> handler(
-        ZIO.serviceWithZIO[ProjectManager](_.getIndexHTML)
-          .map(Html.raw)
-          .map(Response.html(_))
-      ),
+      Method.GET / "" -> handler(getIndexHtml),
 
       // main js file
       Method.GET / "main.js" -> Handler.fromFileZIO(
@@ -75,7 +71,15 @@ object Server {
 
       // health check
       Method.GET / "health" -> handler(Response.ok),
+
+      // otherwise index html
+      RoutePattern.any -> handler((_: Path, _: Request) => getIndexHtml),
     )
+
+  private def getIndexHtml =
+    ZIO.serviceWithZIO[ProjectManager](_.makeIndexHTML)
+      .map(Html.raw)
+      .map(Response.html(_))
 
   private def write(channel: WebSocketChannel, stream: ZStream[Any, Throwable, String], scope: Scope.Closeable) =
     stream

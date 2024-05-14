@@ -11,7 +11,7 @@ trait ProjectManager {
   def buildJs: Task[Unit]
   def getMainJSFile: Task[File]
   def getMainJSMapFile: Task[File]
-  def getIndexHTML: Task[String]
+  def makeIndexHTML: Task[String]
   def watchMainJS: ZIO[Scope, Nothing, ZStream[Any, Nothing, String]]
 }
 
@@ -39,7 +39,7 @@ final class UsefulProjectManager(config: Config, fileWatcher: FileWatcher) exten
     else
       ZIO.attempt(s"sbt ~$uiProjectName/fullLinkJS" !<)
 
-  override def getIndexHTML: Task[String] = ZIO.succeed(indexHtmlString)
+  override def makeIndexHTML: Task[String] = ZIO.succeed(indexHtmlString)
 
   override def watchMainJS: ZIO[Scope, Nothing, ZStream[Any, Nothing, String]] = fileWatcher.streamScoped
 
