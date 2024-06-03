@@ -107,21 +107,41 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
         signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(paddingRight.px)
 
       case SelfAlignment(alignment) =>
-        shape match {
-          case Styled(_, StaticText(_)) =>
-            Seq(
-              textAlign    := alignment.toString,
-              alignContent := alignment.toString,
-              flexShrink(0),
-            )
-          case Styled(_, Text(_))       =>
-            Seq(
-              textAlign    := alignment.toString,
-              alignContent := alignment.toString,
-              flexShrink(0),
-            )
-          case _                        =>
-            Seq(alignSelf := alignment.toString)
+        alignment match {
+          case signal: ConstantSignal[_] =>
+            shape match {
+              case Styled(_, StaticText(_)) =>
+                Seq(
+                  textAlign    := signal.self.toString,
+                  alignContent := signal.self.toString,
+                  flexShrink(0),
+                )
+              case Styled(_, Text(_))       =>
+                Seq(
+                  textAlign    := signal.self.toString,
+                  alignContent := signal.self.toString,
+                  flexShrink(0),
+                )
+              case _                        =>
+                Seq(alignSelf := signal.self.toString)
+            }
+          case signal                    =>
+            shape match {
+              case Styled(_, StaticText(_)) =>
+                Seq(
+                  textAlign <-- toLaminarSignal(signal.map(_.toString)),
+                  alignContent <-- toLaminarSignal(signal.map(_.toString)),
+                  flexShrink(0),
+                )
+              case Styled(_, Text(_))       =>
+                Seq(
+                  textAlign <-- toLaminarSignal(signal.map(_.toString)),
+                  alignContent <-- toLaminarSignal(signal.map(_.toString)),
+                  flexShrink(0),
+                )
+              case _                        =>
+                Seq(alignSelf <-- toLaminarSignal(signal.map(_.toString)))
+            }
         }
 
       case Width(percentage) => signalToModifierWithDerivedStyleProp(percentage)(identity)(width.percent)
