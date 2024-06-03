@@ -21,6 +21,8 @@ trait Signal[+A] {
 
 object Signal {
 
+  def constant[A](value: A): Signal[A] = new ConstantSignal(value)
+
   def fromRef[A](ref: SubscriptionRef[A]): Signal[A] = new RefSignal(ref)
 
   def fromStream[A](stream: Stream[Throwable, A]): Task[Signal[A]] =
@@ -30,6 +32,12 @@ object Signal {
       _    <- stream.mapZIO(element => ref.set(element)).runDrain.forkDaemon
     } yield new RefSignal(ref)
 
+}
+
+final private[picazio] class ConstantSignal[A](val self: A) extends Signal[A] {
+  override def get: Task[A]                  = ZIO.succeed(self)
+  override def changes: Stream[Throwable, A] = ZStream.succeed(self)
+  override def map[B](f: A => B): Signal[B]  = new ConstantSignal(f(self))
 }
 
 final private[picazio] class RefSignal[A](underlying: SubscriptionRef[A]) extends Signal[A] {

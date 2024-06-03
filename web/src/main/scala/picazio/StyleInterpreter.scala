@@ -1,6 +1,8 @@
 package picazio
 
-import com.raquo.laminar.api.L.*
+import com.raquo.laminar.api.L.{ Signal as LaminarSignal, Style as LaminarStyle, * }
+import com.raquo.laminar.keys.DerivedStyleProp
+import com.raquo.laminar.modifiers.KeySetter.StyleSetter
 import com.raquo.laminar.nodes.*
 import com.raquo.laminar.nodes.ReactiveHtmlElement.Base
 import org.scalajs.dom.Element
@@ -29,6 +31,7 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
       case OnClick(_, inner)       => applyTypography(inner)(styleModifiers)
       case OnInput(_, inner)       => applyTypography(inner)(styleModifiers)
       case OnInputFilter(_, inner) => applyTypography(inner)(styleModifiers)
+      case OnKeyPressed(_, inner)  => applyTypography(inner)(styleModifiers)
       case _                       => styleModifiers
     }
 
@@ -53,6 +56,9 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
       case _: Grid[?]             => ArrayStyles.default
       case _: Background[?]       => BackgroundStyles.default
       case _: OnClick[?, ?]       => OnClickStyles.default
+      case _: OnInput[?, ?]       => InputTextStyles.default
+      case _: OnInputFilter[?]    => InputTextStyles.default
+      case _: OnKeyPressed[?, ?]  => InputTextStyles.default
       case Styled(styles, _)      => styles
       case _                      => StyleSheet.empty
     }
@@ -61,16 +67,44 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
 
   private def convertToLaminarStyleSetters(shape: Shape[?])(themedStyles: ThemedStyles): Seq[Modifier[Base]] = {
     val ThemedStyles(styles, Theme(sizeMultiplier, _, colorPalette)) = themedStyles
-    styles.values.flatMap {
-      case MarginTop(size)    => Seq(marginTop := (size * sizeMultiplier).toString + "px")
-      case MarginBottom(size) => Seq(marginBottom := (size * sizeMultiplier).toString + "px")
-      case MarginStart(size)  => Seq(marginLeft := (size * sizeMultiplier).toString + "px")
-      case MarginEnd(size)    => Seq(marginRight := (size * sizeMultiplier).toString + "px")
 
-      case PaddingTop(size)    => Seq(paddingTop := (size * sizeMultiplier).toString + "px")
-      case PaddingBottom(size) => Seq(paddingBottom := (size * sizeMultiplier).toString + "px")
-      case PaddingStart(size)  => Seq(paddingLeft := (size * sizeMultiplier).toString + "px")
-      case PaddingEnd(size)    => Seq(paddingRight := (size * sizeMultiplier).toString + "px")
+    def signalToModifierWithDerivedStyleProp[A, B](
+      signal: Signal[A]
+    )(f: A => B)(prop: DerivedStyleProp[B]): Seq[Modifier[Base]] = signal match {
+      case s: ConstantSignal[A] => Seq(prop := f(s.self))
+      case _                    => Seq(prop <-- toLaminarSignal(signal.map(f)))
+    }
+
+    def signalToModifierWithStyleProp[A, B](signal: Signal[A])(f: A => B)(prop: StyleProp[B]): Seq[Modifier[Base]] =
+      signal match {
+        case s: ConstantSignal[A] => Seq(prop := f(s.self))
+        case _                    => Seq(prop <-- toLaminarSignal(signal.map(f)))
+      }
+
+    def signalToModifier[A](signal: Signal[A])(f: A => Seq[StyleSetter]): Seq[Modifier[Base]] = signal match {
+      case s: ConstantSignal[A] => f(s.self)
+      case _                    => Seq.empty // TODO
+    }
+
+    def styleToLaminarModifierSeq(style: Style): Seq[Modifier[Base]] = style match {
+
+      case MarginTop(size)    =>
+        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(marginTop.px)
+      case MarginBottom(size) =>
+        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(marginBottom.px)
+      case MarginStart(size)  =>
+        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(marginLeft.px)
+      case MarginEnd(size)    =>
+        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(marginRight.px)
+
+      case PaddingTop(size)    =>
+        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(paddingTop.px)
+      case PaddingBottom(size) =>
+        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(paddingBottom.px)
+      case PaddingStart(size)  =>
+        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(paddingLeft.px)
+      case PaddingEnd(size)    =>
+        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(paddingRight.px)
 
       case SelfAlignment(alignment) =>
         shape match {
@@ -90,55 +124,64 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
             Seq(alignSelf := alignment.toString)
         }
 
-      case Width(percentage) => Seq(width.percent(percentage))
+      case Width(percentage) => signalToModifierWithDerivedStyleProp(percentage)(identity)(width.percent)
 
-      case FixHeight(size) => Seq(height.px((size * sizeMultiplier).self.toInt))
-      case FixWidth(size)  => Seq(width.px((size * sizeMultiplier).self.toInt))
+      case FixHeight(size) =>
+        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(height.px)
+      case FixWidth(size)  => signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(width.px)
 
-      case JustifyContent(justification) => Seq(justifyContent := justification.toString)
+      case JustifyContent(justification) => signalToModifierWithStyleProp(justification)(_.toString)(justifyContent)
 
-      case BorderTopWidth(size: Size)    => Seq(borderTopWidth := (size * sizeMultiplier).toString + "px")
-      case BorderBottomWidth(size: Size) => Seq(borderBottomWidth := (size * sizeMultiplier).toString + "px")
-      case BorderStartWidth(size: Size)  => Seq(borderLeftWidth := (size * sizeMultiplier).toString + "px")
-      case BorderEndWidth(size: Size)    => Seq(borderRightWidth := (size * sizeMultiplier).toString + "px")
+      case BorderTopWidth(size)    =>
+        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(borderTopWidth.px)
+      case BorderBottomWidth(size) =>
+        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(borderBottomWidth.px)
+      case BorderStartWidth(size)  =>
+        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(borderLeftWidth.px)
+      case BorderEndWidth(size)    =>
+        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(borderRightWidth.px)
 
-      case BorderTopStyle(line: Line)    => Seq(borderTopStyle := line.toString)
-      case BorderBottomStyle(line: Line) => Seq(borderBottomStyle := line.toString)
-      case BorderStartStyle(line: Line)  => Seq(borderLeftStyle := line.toString)
-      case BorderEndStyle(line: Line)    => Seq(borderRightStyle := line.toString)
+      case BorderTopStyle(line)    => signalToModifierWithStyleProp(line)(_.toString)(borderTopStyle)
+      case BorderBottomStyle(line) => signalToModifierWithStyleProp(line)(_.toString)(borderBottomStyle)
+      case BorderStartStyle(line)  => signalToModifierWithStyleProp(line)(_.toString)(borderLeftStyle)
+      case BorderEndStyle(line)    => signalToModifierWithStyleProp(line)(_.toString)(borderRightStyle)
 
-      case BorderRadius(size) => Seq(borderRadius := (size * sizeMultiplier).toString + "px")
+      case BorderRadius(size) =>
+        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(borderRadius.px)
 
       case ColorStyle(color_) =>
         shape match {
-          case Styled(_, Background(_)) => Seq(backgroundColor := colorPalette.get(color_).toString)
-          case _                        => Seq(color := colorPalette.get(color_).toString)
+          case Styled(_, Background(_)) =>
+            signalToModifierWithStyleProp(color_)(colorPalette.get(_).toString)(backgroundColor)
+          case _                        => signalToModifierWithStyleProp(color_)(colorPalette.get(_).toString)(color)
         }
 
-      case BackgroundColorStyle(color_) => Seq(backgroundColor := colorPalette.get(color_).toString)
+      case BackgroundColorStyle(color_) =>
+        signalToModifierWithStyleProp(color_)(colorPalette.get(_).toString)(backgroundColor)
 
-      case CursorStyle(cursor_) => Seq(cursor := cursor_.toString)
+      case CursorStyle(cursor_) => signalToModifierWithStyleProp(cursor_)(_.toString)(cursor)
 
-      case FontSize(size) => Seq(fontSize := (size * sizeMultiplier * 2).toString + "px")
+      case FontSize(size) =>
+        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier * 2).self)(fontSize.px)
 
-      case Outline(line) => Seq(outline := line.toString)
+      case Outline(line) => signalToModifierWithStyleProp(line)(_.toString)(outline)
 
       case Overflowing(overflow_) =>
-        overflow_ match {
+        signalToModifier(overflow_) {
           case Overflow.Hidden   => Seq(overflow.hidden)
           case Overflow.Ellipsis => Seq(textOverflow.ellipsis, overflow.hidden, whiteSpace.nowrap)
           case Overflow.Scroll   => Seq(overflow.scroll)
         }
 
       case Wrapping(wrap_) =>
-        wrap_ match {
+        signalToModifier(wrap_) {
           case Wrap.NoWrap         => Seq(whiteSpace.nowrap)
           case Wrap.WhiteSpaceWrap => Seq(whiteSpace.normal)
         }
-
-      case DynamicPaddingTop(size) =>
-        Seq(paddingTop <-- toLaminarSignal(size.map(_ * sizeMultiplier).map(_.toString)))
     }
+
+    styles.values.flatMap(styleToLaminarModifierSeq)
+
   }
 
   private def amendStyles(

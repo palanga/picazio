@@ -25,7 +25,6 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
   private val empty = span(display.none)
 
-  @tailrec
   private def convertToLaminarReactiveElement(shape: Shape[Any]): ReactiveElement[Element] = {
     shape match {
 
@@ -39,7 +38,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
         input(placeholder := _placeholder)
 
       case SubscribedTextInput(_placeholder, ref) =>
-        convertToLaminarReactiveElement(
+        asLaminarElement(
           Shape.textInput(_placeholder, ref.signal).onInput(text => ref.set(text))
         ) // TODO check if this should call asLaminarElement instead of convertToLaminarReactiveElement
 
