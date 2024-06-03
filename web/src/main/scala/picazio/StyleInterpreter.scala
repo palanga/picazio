@@ -1,6 +1,6 @@
 package picazio
 
-import com.raquo.laminar.api.L.{ Signal as LaminarSignal, Style as LaminarStyle, * }
+import com.raquo.laminar.api.L.{ Signal as LaminarSignal, * }
 import com.raquo.laminar.keys.DerivedStyleProp
 import com.raquo.laminar.modifiers.KeySetter.StyleSetter
 import com.raquo.laminar.nodes.*

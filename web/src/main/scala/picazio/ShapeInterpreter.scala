@@ -1,7 +1,7 @@
 package picazio
 
 import com.raquo.airstream.eventbus.EventBus
-import com.raquo.laminar.CollectionCommand
+import com.raquo.laminar.inserters.CollectionCommand
 import com.raquo.laminar.api.L.{ button as laminarButton, * }
 import com.raquo.laminar.defs.attrs.HtmlAttrs
 import com.raquo.laminar.nodes.*
@@ -243,7 +243,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
     parent: => ParentNode.Base
   )(currentElement: ReactiveElement.Base, newElement: ReactiveElement.Base) =
     ZIO.succeed {
-      ParentNode.replaceChild(parent, currentElement, newElement)
+      ParentNode.replaceChild(parent, currentElement, newElement, scala.scalajs.js.undefined)
       newElement
     }
 
