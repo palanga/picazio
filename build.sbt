@@ -8,7 +8,7 @@ val ZIO_VERSION             = "2.0.22"
 val LAMINAR_VERSION         = "17.0.0"
 val SCALA_JAVA_TIME_VERSION = "2.5.0"
 val SCALA_TEST_VERSION      = "3.2.18"
-val ZIO_HTTP_VERSION        = "3.0.0-RC6"
+val ZIO_HTTP_VERSION        = "3.0.0-RC9"
 
 import org.openqa.selenium.chrome.ChromeOptions
 import org.scalajs.jsenv.selenium.SeleniumJSEnv
