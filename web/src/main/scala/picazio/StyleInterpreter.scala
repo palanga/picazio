@@ -71,18 +71,18 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
     def signalToModifierWithDerivedStyleProp[A, B](
       signal: Signal[A]
     )(f: A => B)(prop: DerivedStyleProp[B]): Seq[Modifier[Base]] = signal match {
-      case s: ConstantSignal[A] => Seq(prop := f(s.self))
+      case s: ConstantSignal[?] => Seq(prop := f(s.self))
       case _                    => Seq(prop <-- toLaminarSignal(signal.map(f)))
     }
 
     def signalToModifierWithStyleProp[A, B](signal: Signal[A])(f: A => B)(prop: StyleProp[B]): Seq[Modifier[Base]] =
       signal match {
-        case s: ConstantSignal[A] => Seq(prop := f(s.self))
+        case s: ConstantSignal[?] => Seq(prop := f(s.self))
         case _                    => Seq(prop <-- toLaminarSignal(signal.map(f)))
       }
 
     def signalToModifier[A](signal: Signal[A])(f: A => Seq[StyleSetter]): Seq[Modifier[Base]] = signal match {
-      case s: ConstantSignal[A] => f(s.self)
+      case s: ConstantSignal[?] => f(s.self)
       case _                    => Seq.empty // TODO
     }
 

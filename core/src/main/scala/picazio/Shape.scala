@@ -65,7 +65,7 @@ object Shape {
   def gridWith[R](columns: Int, rows: Int)(f: (Int, Int) => Shape[R]): Shape[R]                             = Grid(Array.tabulate(rows, columns)((row, column) => f(column, row)))
   def gridWith[R, R1](dimensions: ZIO[R1, Throwable, (Int, Int)])(f: (Int, Int) => Shape[R]): Shape[R & R1] = eventualWith(dimensions) { case (column, row) => gridWith(column, row)(f) }
 
-  final private[picazio] case object Empty                                                                        extends Shape[Any]
+  private[picazio] case object Empty                                                                              extends Shape[Any]
   final private[picazio] case class StaticText(content: String)                                                   extends Shape[Any]
   final private[picazio] case class Text(content: Signal[String])                                                 extends Shape[Any]
   final private[picazio] case class TextInput(placeholder: String)                                                extends Shape[Any]
