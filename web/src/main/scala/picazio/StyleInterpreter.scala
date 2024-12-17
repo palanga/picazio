@@ -108,7 +108,7 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
 
       case SelfAlignment(alignment) =>
         alignment match {
-          case signal: ConstantSignal[_] =>
+          case signal: ConstantSignal[?] =>
             shape match {
               case Styled(_, StaticText(_)) =>
                 Seq(
