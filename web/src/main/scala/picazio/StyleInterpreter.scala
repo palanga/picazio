@@ -86,25 +86,22 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
       case _                    => Seq.empty // TODO
     }
 
+    def sizeToProp(size: Size): String = size match {
+      case Size.Units(self)   => s"${self * sizeMultiplier}px"
+      case Size.Percent(self) => s"$self%"
+    }
+
     def styleToLaminarModifierSeq(style: Style): Seq[Modifier[Base]] = style match {
 
-      case MarginTop(size)    =>
-        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(marginTop.px)
-      case MarginBottom(size) =>
-        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(marginBottom.px)
-      case MarginStart(size)  =>
-        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(marginLeft.px)
-      case MarginEnd(size)    =>
-        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(marginRight.px)
+      case MarginTop(size)    => signalToModifierWithStyleProp(size)(sizeToProp)(marginTop)
+      case MarginBottom(size) => signalToModifierWithStyleProp(size)(sizeToProp)(marginBottom)
+      case MarginStart(size)  => signalToModifierWithStyleProp(size)(sizeToProp)(marginLeft)
+      case MarginEnd(size)    => signalToModifierWithStyleProp(size)(sizeToProp)(marginRight)
 
-      case PaddingTop(size)    =>
-        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(paddingTop.px)
-      case PaddingBottom(size) =>
-        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(paddingBottom.px)
-      case PaddingStart(size)  =>
-        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(paddingLeft.px)
-      case PaddingEnd(size)    =>
-        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(paddingRight.px)
+      case PaddingTop(size)    => signalToModifierWithStyleProp(size)(sizeToProp)(paddingTop)
+      case PaddingBottom(size) => signalToModifierWithStyleProp(size)(sizeToProp)(paddingBottom)
+      case PaddingStart(size)  => signalToModifierWithStyleProp(size)(sizeToProp)(paddingLeft)
+      case PaddingEnd(size)    => signalToModifierWithStyleProp(size)(sizeToProp)(paddingRight)
 
       case SelfAlignment(alignment) =>
         alignment match {
@@ -146,28 +143,22 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
 
       case Width(percentage) => signalToModifierWithDerivedStyleProp(percentage)(identity)(width.percent)
 
-      case FixHeight(size) =>
-        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(height.px)
-      case FixWidth(size)  => signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(width.px)
+      case FixHeight(size) => signalToModifierWithStyleProp(size)(sizeToProp)(height)
+      case FixWidth(size)  => signalToModifierWithStyleProp(size)(sizeToProp)(width)
 
       case JustifyContent(justification) => signalToModifierWithStyleProp(justification)(_.toString)(justifyContent)
 
-      case BorderTopWidth(size)    =>
-        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(borderTopWidth.px)
-      case BorderBottomWidth(size) =>
-        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(borderBottomWidth.px)
-      case BorderStartWidth(size)  =>
-        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(borderLeftWidth.px)
-      case BorderEndWidth(size)    =>
-        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(borderRightWidth.px)
+      case BorderTopWidth(size)    => signalToModifierWithStyleProp(size)(sizeToProp)(borderTopWidth)
+      case BorderBottomWidth(size) => signalToModifierWithStyleProp(size)(sizeToProp)(borderBottomWidth)
+      case BorderStartWidth(size)  => signalToModifierWithStyleProp(size)(sizeToProp)(borderLeftWidth)
+      case BorderEndWidth(size)    => signalToModifierWithStyleProp(size)(sizeToProp)(borderRightWidth)
 
       case BorderTopStyle(line)    => signalToModifierWithStyleProp(line)(_.toString)(borderTopStyle)
       case BorderBottomStyle(line) => signalToModifierWithStyleProp(line)(_.toString)(borderBottomStyle)
       case BorderStartStyle(line)  => signalToModifierWithStyleProp(line)(_.toString)(borderLeftStyle)
       case BorderEndStyle(line)    => signalToModifierWithStyleProp(line)(_.toString)(borderRightStyle)
 
-      case BorderRadius(size) =>
-        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier).self)(borderRadius.px)
+      case BorderRadius(size) => signalToModifierWithStyleProp(size)(sizeToProp)(borderRadius)
 
       case ColorStyle(color_) =>
         shape match {
@@ -181,8 +172,7 @@ private[picazio] class StyleInterpreter(implicit runtime: Runtime[Theme], unsafe
 
       case CursorStyle(cursor_) => signalToModifierWithStyleProp(cursor_)(_.toString)(cursor)
 
-      case FontSize(size) =>
-        signalToModifierWithDerivedStyleProp(size)(size => (size * sizeMultiplier * 2).self)(fontSize.px)
+      case FontSize(size) => signalToModifierWithStyleProp(size)(size => sizeToProp(size * 2))(fontSize)
 
       case Outline(line) => signalToModifierWithStyleProp(line)(_.toString)(outline)
 
