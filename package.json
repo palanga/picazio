@@ -1,5 +1,5 @@
 {
   "devDependencies": {
-    "chromedriver": "^125.0.3"
+    "chromedriver": "^131.0.3"
   }
 }

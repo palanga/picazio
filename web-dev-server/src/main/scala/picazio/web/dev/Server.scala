@@ -33,7 +33,7 @@ object Server {
       projectManager <- ProjectManager.withConfig(config)
       _              <- projectManager.buildJs.fork
       _              <- printInfo(config.host, config.port)
-      _              <- ZIOServer.serve(routes.sandbox.toHttpApp @@ Middleware.cors(corsConfig)).provide(
+      _              <- ZIOServer.serve(routes.sandbox @@ Middleware.cors(corsConfig)).provide(
                           ZLayer.succeed(projectManager),
                           ZIOServer.live,
                           ZLayer.succeed(serverConfig),

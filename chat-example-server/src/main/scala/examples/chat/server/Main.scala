@@ -20,7 +20,7 @@ object Main extends ZIOAppDefault {
       localhost     = InetAddress.getLocalHost.getHostAddress
       _            <- Console.printLine("listening on localhost:8080 in your computer")
       _            <- Console.printLine(s"listening on $localhost:8080 in your local network")
-      _            <- Server.serve(chatRoomHttp.routes.sandbox.toHttpApp)
+      _            <- Server.serve(chatRoomHttp.routes.sandbox)
     } yield ()
 
 }
