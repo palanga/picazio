@@ -99,7 +99,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
             // TODO explore if the following shouldn't be a flatMap of a ZIO.attempt(commandBus.emit)
             .map(commandBus.emit)
             .runDrain
-            .ignoreLoggedError
+            .ignoreLoggedError("Error rendering an streamed array")
         )
         div(
           children.command <-- commandBus.events,
@@ -121,13 +121,19 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
         )
 
       case OnClick(task, inner) =>
-        val runOnClick = onClick --> { _ => runtime.unsafe.runToFuture(task.ignoreLoggedError) }
+        val runOnClick = onClick --> { _ =>
+          runtime.unsafe.runToFuture(task.ignoreLoggedError("Error running onClick handler"))
+        }
         asLaminarElement(inner).amend(runOnClick)
 
       case OnInput(action, TextInput(_placeholder)) =>
         input(
           placeholder := _placeholder,
-          onInput.mapToValue --> { current => runtime.unsafe.runToFuture(action(current).ignoreLoggedError) },
+          onInput.mapToValue --> { current =>
+            runtime.unsafe.runToFuture(
+              action(current).ignoreLoggedError("Error running onInput handler for a text input")
+            )
+          },
         )
 
       case OnInput(action, SubscribedTextInput(_placeholder, ref)) =>
@@ -136,7 +142,11 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
           controlled(
             value <-- toLaminarSignal(ref.signal),
             onInput.mapToValue --> { current =>
-              runtime.unsafe.runToFuture(ref.set(current) <* action(current).ignoreLoggedError)
+              runtime.unsafe.runToFuture(
+                ref.set(current) <* action(current).ignoreLoggedError(
+                  "Error running onInput handler for a subscribed text input"
+                )
+              )
             },
           ),
         )
@@ -146,10 +156,14 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
         def handleOnInput(current: String): Unit = {
           state.set(current)
-          runtime.unsafe.runToFuture(action(current).ignoreLoggedError)
+          runtime.unsafe.runToFuture(
+            action(current).ignoreLoggedError("Error running onInput handler for a signaled text input")
+          )
         }
 
-        runtime.unsafe.runToFuture(signal.changes.map(state.set).runDrain.ignoreLoggedError)
+        runtime.unsafe.runToFuture(
+          signal.changes.map(state.set).runDrain.ignoreLoggedError("Error setting the state of a signaled text input")
+        )
         input(
           placeholder := _placeholder,
           controlled(
@@ -160,7 +174,7 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
       case OnKeyPressed(action, inner) =>
         val runOnKeyPressed = onKeyDown --> { event =>
-          runtime.unsafe.runToFuture(action(event.keyCode).ignoreLoggedError)
+          runtime.unsafe.runToFuture(action(event.keyCode).ignoreLoggedError("Error running onKeyPressed handler"))
         }
         asLaminarElement(inner).amend(runOnKeyPressed)
 
@@ -169,10 +183,18 @@ private[picazio] class ShapeInterpreter(implicit runtime: Runtime[Theme], unsafe
 
         def handleOnInput(current: String): Unit = {
           state.set(current)
-          runtime.unsafe.runToFuture(ref.set(current).ignoreLoggedError)
+          runtime.unsafe.runToFuture(
+            ref.set(current).ignoreLoggedError(
+              "Error running onInput handler for a subscribed text input in a onInputFilter"
+            )
+          )
         }
 
-        runtime.unsafe.runToFuture(ref.changes.filter(filter).map(state.set).runDrain.ignoreLoggedError)
+        runtime.unsafe.runToFuture(
+          ref.changes.filter(filter).map(state.set).runDrain.ignoreLoggedError(
+            "Error setting the state of a subscribed text input in a onInputFilter"
+          )
+        )
         input(
           placeholder := _placeholder,
           controlled(

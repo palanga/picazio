@@ -4,11 +4,13 @@ val SCALA_2                 = "2.13.16"
 val SCALA_3                 = "3.3.4"
 val MAIN_SCALA              = SCALA_2
 val ALL_SCALA               = Seq(SCALA_3, SCALA_2)
-val ZIO_VERSION             = "2.0.22"
+val ZIO_VERSION             = "2.1.15"
 val LAMINAR_VERSION         = "17.2.0"
 val SCALA_JAVA_TIME_VERSION = "2.5.0"
 val SCALA_TEST_VERSION      = "3.2.19"
 val ZIO_HTTP_VERSION        = "3.0.0"
+
+val KEEP_BROWSER_ALIVE = false
 
 import org.openqa.selenium.chrome.ChromeOptions
 import org.scalajs.jsenv.selenium.SeleniumJSEnv
@@ -83,7 +85,7 @@ lazy val web =
         "org.scalatest"     %%% "scalatest"            % SCALA_TEST_VERSION % Test,
       ),
       Test / parallelExecution := false,
-      Test / jsEnv             := seleniumJSEnv(keepTestBrowserAlive = false),
+      Test / jsEnv             := seleniumJSEnv(KEEP_BROWSER_ALIVE),
       commonSettings,
     ).dependsOn(core)
 

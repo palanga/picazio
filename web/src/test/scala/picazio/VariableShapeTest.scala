@@ -59,35 +59,19 @@ class VariableShapeTest extends WebInterpreterSpec with Matchers {
 
   testShape("an eventual variable shape") { render =>
 
-    sealed trait Number
-    object Number {
-      case object Zero extends Number
-      case object One  extends Number
-    }
-
-    def numberToShape(number: Number): Shape[Any] = number match {
-      case Number.Zero => Shape.text("zero")
-      case Number.One  => Shape.text("one")
-    }
-
-    def shape(numberSignalTask: UIO[Signal[Number]]) =
-      Shape.row(
-        Shape.eventual(
-          numberSignalTask.map(numberSignal => Shape.variableWith(numberSignal)(numberToShape))
-        )
-      )
+    def EventualVariableText(signalTask: UIO[Signal[String]]) =
+      Shape.eventualWith(signalTask)(Shape.variableWith(_)(Shape.text))
 
     for {
-      number          <- SubscriptionRef.make[Number](Number.Zero)
-      numberSignalTask = number.changes.take(1).runHead.as(number.signal)
-      root            <- render(shape(numberSignalTask))
-      _               <- debounce
-      _               <- debounce(root.head.text shouldBe "dummy")
-      _               <- debounce
-      _               <- number.set(Number.One).delay(0.seconds)
-      _               <- debounce
-      _               <- debounce
-      result          <- debounce(root.head.text shouldBe "one")
+      number    <- SubscriptionRef.make("hola")
+      queue     <- Queue.unbounded[Unit]
+      signalTask = queue.take.as(number.signal)
+      root      <- render(Shape.column(EventualVariableText(signalTask)))
+      _         <- debounce(root.head.text shouldBe "dummy")
+      _         <- queue.offer(())
+      _         <- debounce(root.head.text shouldBe "hola")
+      _         <- number.set("chau")
+      result    <- debounce(root.head.text shouldBe "chau")
     } yield result
 
   }

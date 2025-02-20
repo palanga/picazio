@@ -41,12 +41,10 @@ class WebAppTest extends WebInterpreterSpec with Matchers {
     for {
       root <- render(Shape.text("a clickable text").onClick(Counter.increment))
       _    <- root.click.repeatN(4)
-
-    } yield {
-      Counter.get shouldBe 5
-      root.text shouldBe "a clickable text"
-      root.children shouldBe empty
-    }
+      _    <- debounce(Counter.get shouldBe 5)
+      _    <- debounce(root.text shouldBe "a clickable text")
+      _    <- debounce(root.children shouldBe empty)
+    } yield assert(true)
 
   }
 
@@ -64,12 +62,10 @@ class WebAppTest extends WebInterpreterSpec with Matchers {
     for {
       root <- render(Shape.button("botón").onClick(Counter.increment))
       _    <- root.click.repeatN(4)
-
-    } yield {
-      Counter.get shouldBe 5
-      root.text shouldBe "botón"
-      root.children shouldBe empty
-    }
+      _    <- debounce(Counter.get shouldBe 5)
+      _    <- debounce(root.text shouldBe "botón")
+      _    <- debounce(root.children shouldBe empty)
+    } yield assert(true)
 
   }
 

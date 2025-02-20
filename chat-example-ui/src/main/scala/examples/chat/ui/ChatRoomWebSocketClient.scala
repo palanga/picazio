@@ -29,7 +29,7 @@ object ChatRoomWebSocketClient {
 final class ChatRoomWebSocketClient(webSocket: WebSocket) extends ChatRoom {
 
   override def sendMessage(message: String): ZIO[Any, Nothing, Unit] =
-    ZIO.attempt(webSocket.send(message)).logError.ignore
+    ZIO.attempt(webSocket.send(message)).logError("Error sending message").ignore
 
   override def readMessages: ZIO[Any, Nothing, ZStream[Any, Nothing, String]] =
     ZIO.succeed(

@@ -23,12 +23,12 @@ trait WebInterpreterSpec extends AsyncFunSuite {
   def testShape(testName: String)(f: Renderer => Task[Assertion]): Unit =
     test(testName)(
       Unsafe.unsafe { implicit unsafe =>
-        runtime.unsafe.runToFuture(f(render(testName)(_)).logError)
+        runtime.unsafe.runToFuture(f(render(testName)(_).logError(s"Error rendering test <<$testName>>")))
       }
     )
 
-  def debounce[A](task: => A): Task[A] = ZIO.attempt(task).delay(0.seconds)
-  def debounce: Task[Unit]             = ZIO.unit.delay(0.seconds)
+  def debounce[A](task: => A): Task[A] = ZIO.attempt(task).delay(1.nanosecond)
+  def debounce: Task[Unit]             = ZIO.unit.delay(1.nanosecond)
 
   type Renderer = Shape[Any] => Task[RenderedElement]
 
