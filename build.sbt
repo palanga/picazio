@@ -19,6 +19,7 @@ inThisBuild(
   List(
     scalaVersion           := MAIN_SCALA,
     crossScalaVersions     := ALL_SCALA,
+    versionScheme          := Some("early-semver"),
     organization           := "io.github.palanga",
     homepage               := Some(url("https://github.com/palanga/picazio")),
     licenses               := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
