@@ -1,4 +1,4 @@
-addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.9.2")
+addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.11.1")
 addSbtPlugin("org.scala-js"   % "sbt-scalajs"    % "1.19.0")
 addSbtPlugin("org.scalameta"  % "sbt-scalafmt"   % "2.5.0")
 
